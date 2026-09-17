@@ -5,16 +5,26 @@ import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-gf!fzsy2odb-e)g1xrg285y47m8kdzk8%zrzqn3%-w=ps$fjz*')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+# ============================================================
+# SECURITY
+# ============================================================
+
+# Uses DJANGO_SECRET_KEY from environment variables on production; fallback for local dev.
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-gf!fzsy2odb-e)g1xrg285y47m8kdzk8%zrzqn3%-w=ps$fjz*'
+)
+
+# Runs DEBUG=True locally unless explicitly set to False in environment.
+DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = ['*']
 
 
-# Application definition
+# ============================================================
+# APPLICATIONS
+# ============================================================
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -23,12 +33,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'registry',
 ]
+
+
+# ============================================================
+# MIDDLEWARE
+# ============================================================
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -37,7 +54,19 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+
+# ============================================================
+# URL / WSGI
+# ============================================================
+
 ROOT_URLCONF = 'clan_registry.urls'
+
+WSGI_APPLICATION = 'clan_registry.wsgi.application'
+
+
+# ============================================================
+# TEMPLATES
+# ============================================================
 
 TEMPLATES = [
     {
@@ -54,19 +83,26 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'clan_registry.wsgi.application'
 
+# ============================================================
+# DATABASE
+# ============================================================
 
-# Database
+# Connects automatically to PostgreSQL via DATABASE_URL on Render/production,
+# and falls back to SQLite locally when DATABASE_URL is not set.
 DATABASES = {
     'default': dj_database_url.config(
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600
+        conn_max_age=600,
+        conn_health_checks=True,
     )
 }
 
 
-# Password validation
+# ============================================================
+# PASSWORD VALIDATION
+# ============================================================
+
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -75,19 +111,46 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
+# ============================================================
+# INTERNATIONALIZATION
+# ============================================================
+
 LANGUAGE_CODE = 'en-us'
+
 TIME_ZONE = 'UTC'
+
 USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
+# ============================================================
+# STATIC FILES
+# ============================================================
+
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+
+# Required destination path for collectstatic (resolves build error)
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Email
+# WhiteNoise storage backend for compression and serving
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
+    },
+}
+
+
+# ============================================================
+# EMAIL
+# ============================================================
+
 MAILERS = {
     'default': {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
