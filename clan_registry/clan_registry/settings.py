@@ -10,13 +10,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY
 # ============================================================
 
-# Uses DJANGO_SECRET_KEY from environment variables on production; fallback for local dev.
 SECRET_KEY = os.environ.get(
     'DJANGO_SECRET_KEY',
     'django-insecure-gf!fzsy2odb-e)g1xrg285y47m8kdzk8%zrzqn3%-w=ps$fjz*'
 )
 
-# Runs DEBUG=True locally unless explicitly set to False in environment.
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = ['*']
@@ -88,8 +86,6 @@ TEMPLATES = [
 # DATABASE
 # ============================================================
 
-# Connects automatically to PostgreSQL via DATABASE_URL on Render/production,
-# and falls back to SQLite locally when DATABASE_URL is not set.
 DATABASES = {
     'default': dj_database_url.config(
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
@@ -133,10 +129,8 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
-# Required destination path for collectstatic (resolves build error)
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# WhiteNoise storage backend for compression and serving
 STORAGES = {
     'default': {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',
