@@ -1,0 +1,950 @@
+{% extends "registry/base.html" %}
+
+{% block title %}
+Add Life Event | Clan Registry
+{% endblock %}
+
+{% block page_heading %}
+Add Life Event
+{% endblock %}
+
+{% block content %}
+
+<div class="page-container">
+
+```
+<div class="page-intro">
+
+    <div>
+
+        <p class="section-kicker">
+            CLAN HISTORY
+        </p>
+
+        <h1>
+            Add Life Event
+        </h1>
+
+        <p class="section-description">
+            Search for a registered clan member and add a historical
+            Marriage, Divorce, or Death record.
+        </p>
+
+    </div>
+
+    <a
+        href="{% url 'life_events' %}"
+        class="secondary-button"
+    >
+        ← Back to Life Events
+    </a>
+
+</div>
+
+
+<!-- =====================================================
+     STEP 1 — SEARCH FOR MEMBER
+====================================================== -->
+
+<div class="form-card">
+
+    <div class="form-card-header">
+
+        <div>
+
+            <span class="step-number">
+                01
+            </span>
+
+            <div class="step-heading">
+
+                <h2>
+                    Select Clan Member
+                </h2>
+
+                <p>
+                    Search the registered members before adding
+                    a historical event.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <form
+        method="get"
+        action="{% url 'new_life_event' %}"
+        class="search-form"
+    >
+
+        <div class="search-input-wrapper">
+
+            <input
+                type="search"
+                name="search"
+                value="{{ search_query }}"
+                placeholder="Search by name or member ID..."
+                autocomplete="off"
+            >
+
+            <button
+                type="submit"
+                class="primary-button"
+            >
+                Search
+            </button>
+
+        </div>
+
+    </form>
+
+
+    {% if search_query %}
+
+        <div class="search-results">
+
+            <div class="search-results-header">
+
+                <strong>
+                    Search Results
+                </strong>
+
+                <span>
+
+                    {% if members %}
+
+                        {{ members|length }}
+                        member{{ members|length|pluralize }}
+                        found
+
+                    {% else %}
+
+                        No members found
+
+                    {% endif %}
+
+                </span>
+
+            </div>
+
+
+            {% if members %}
+
+                <div class="member-results">
+
+                    {% for member in members %}
+
+                        <a
+                            href="{% url 'new_life_event' %}?member={{ member.pk }}"
+                            class="member-result"
+                        >
+
+                            <div class="member-avatar">
+
+                                {{ member.firstname|first|upper }}
+
+                            </div>
+
+
+                            <div class="member-result-info">
+
+                                <strong>
+
+                                    {{ member.surname }}
+                                    {{ member.firstname }}
+                                    {{ member.middlename }}
+
+                                </strong>
+
+                                <span>
+
+                                    {{ member.aut_id }}
+
+                                </span>
+
+                            </div>
+
+
+                            <div class="member-result-arrow">
+                                →
+                            </div>
+
+                        </a>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <div class="empty-search">
+
+                    <div class="empty-icon">
+                        ⌕
+                    </div>
+
+                    <h3>
+                        No registered member found
+                    </h3>
+
+                    <p>
+                        Try searching with the member's surname,
+                        first name, or registry ID.
+                    </p>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+
+{% if selected_member %}
+
+
+    <!-- =================================================
+         SELECTED MEMBER
+    ================================================== -->
+
+    <div class="selected-member-card">
+
+        <div class="selected-member-label">
+            SELECTED MEMBER
+        </div>
+
+
+        <div class="selected-member-content">
+
+            <div class="selected-member-avatar">
+
+                {{ selected_member.firstname|first|upper }}
+
+            </div>
+
+
+            <div class="selected-member-info">
+
+                <h2>
+
+                    {{ selected_member.surname }}
+                    {{ selected_member.firstname }}
+                    {{ selected_member.middlename }}
+
+                </h2>
+
+                <p>
+
+                    Registry ID:
+
+                    <strong>
+                        {{ selected_member.aut_id }}
+                    </strong>
+
+                </p>
+
+                <span>
+                    {{ selected_member.family_root }}
+                </span>
+
+            </div>
+
+
+            <a
+                href="{% url 'new_life_event' %}"
+                class="change-member-button"
+            >
+                Change Member
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         STEP 2 — EVENT TYPE
+    ================================================== -->
+
+    <div class="form-card">
+
+        <div class="form-card-header">
+
+            <div>
+
+                <span class="step-number">
+                    02
+                </span>
+
+                <div class="step-heading">
+
+                    <h2>
+                        Select Event Type
+                    </h2>
+
+                    <p>
+                        Choose the historical event you want
+                        to record for this member.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <form
+            method="post"
+            action="{% url 'new_life_event' %}?member={{ selected_member.pk }}"
+            id="lifeEventForm"
+        >
+
+            {% csrf_token %}
+
+
+            <!-- Selected member -->
+
+            <input
+                type="hidden"
+                name="member"
+                value="{{ selected_member.pk }}"
+            >
+
+
+            <!-- =================================================
+                 EVENT TYPE
+            ================================================== -->
+
+            <div class="form-group">
+
+                <label for="event_type">
+                    Event Type
+                </label>
+
+                <select
+                    name="event_type"
+                    id="event_type"
+                    class="form-control"
+                    required
+                >
+
+                    <option value="">
+                        Select event type
+                    </option>
+
+                    <option
+                        value="MARRIAGE"
+                        {% if selected_event_type == "MARRIAGE" %}selected{% endif %}
+                    >
+                        Marriage
+                    </option>
+
+                    <option
+                        value="DIVORCE"
+                        {% if selected_event_type == "DIVORCE" %}selected{% endif %}
+                    >
+                        Divorce
+                    </option>
+
+                    <option
+                        value="DEATH"
+                        {% if selected_event_type == "DEATH" %}selected{% endif %}
+                    >
+                        Death
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- =================================================
+                 COMMON EVENT INFORMATION
+                 
+                 Marriage:
+                 Event Date + Location
+
+                 Divorce:
+                 Event Date + Location
+
+                 Death:
+                 Event Date + Location
+            ================================================== -->
+
+            <div
+                id="commonEventFields"
+                class="event-fields"
+                {% if not selected_event_type %}style="display: none;"{% endif %}
+            >
+
+                <div class="form-section-title">
+
+                    <h3>
+                        Event Information
+                    </h3>
+
+                    <p>
+                        Enter the date and location associated
+                        with this historical event.
+                    </p>
+
+                </div>
+
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+
+                        <label for="event_date">
+                            Event Date
+                        </label>
+
+                        <input
+                            type="date"
+                            name="event_date"
+                            id="event_date"
+                            class="form-control"
+                            value="{{ life_event_form.event_date.value|default:'' }}"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="event_location">
+                            Event Location
+                        </label>
+
+                        <input
+                            type="text"
+                            name="event_location"
+                            id="event_location"
+                            class="form-control"
+                            placeholder="Enter location"
+                            value="{{ life_event_form.event_location.value|default:'' }}"
+                        >
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 MARRIAGE DETAILS
+            ================================================== -->
+
+            <div
+                id="marriageFields"
+                class="event-fields"
+                {% if selected_event_type != "MARRIAGE" %}style="display: none;"{% endif %}
+            >
+
+                <div class="form-section-title">
+
+                    <h3>
+                        Marriage Information
+                    </h3>
+
+                    <p>
+                        Enter the spouse information associated
+                        with this historical marriage.
+                    </p>
+
+                </div>
+
+
+                <div class="form-grid">
+
+
+                    <div class="form-group form-group-full">
+
+                        <label for="marriage_spouse_full_name">
+                            Spouse Full Name
+                        </label>
+
+                        <input
+                            type="text"
+                            name="spouse_full_name"
+                            id="marriage_spouse_full_name"
+                            class="form-control marriage-input"
+                            placeholder="Enter spouse full name"
+                            value="{{ marriage_form.spouse_full_name.value|default:'' }}"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="marriage_date">
+                            Date of Marriage
+                        </label>
+
+                        <input
+                            type="date"
+                            name="date_of_marriage"
+                            id="marriage_date"
+                            class="form-control marriage-input"
+                            value="{{ marriage_form.date_of_marriage.value|default:'' }}"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="marriage_spouse_clan">
+                            Spouse Clan
+                        </label>
+
+                        <input
+                            type="text"
+                            name="spouse_clan"
+                            id="marriage_spouse_clan"
+                            class="form-control marriage-input"
+                            placeholder="Enter spouse clan"
+                            value="{{ marriage_form.spouse_clan.value|default:'' }}"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="marriage_spouse_village">
+                            Spouse Village
+                        </label>
+
+                        <input
+                            type="text"
+                            name="spouse_village"
+                            id="marriage_spouse_village"
+                            class="form-control marriage-input"
+                            placeholder="Enter spouse village"
+                            value="{{ marriage_form.spouse_village.value|default:'' }}"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="marriage_spouse_state">
+                            Spouse State
+                        </label>
+
+                        <input
+                            type="text"
+                            name="spouse_state"
+                            id="marriage_spouse_state"
+                            class="form-control marriage-input"
+                            placeholder="Enter spouse state"
+                            value="{{ marriage_form.spouse_state.value|default:'' }}"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="marriage_spouse_country">
+                            Spouse Country
+                        </label>
+
+                        <input
+                            type="text"
+                            name="spouse_country"
+                            id="marriage_spouse_country"
+                            class="form-control marriage-input"
+                            placeholder="Enter spouse country"
+                            value="{{ marriage_form.spouse_country.value|default:'' }}"
+                        >
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 DIVORCE DETAILS
+
+                 IMPORTANT:
+                 Divorce only requires:
+                 1. Spouse Full Name
+                 2. Date of Divorce
+
+                 Other spouse information already exists
+                 in the original Registry record.
+            ================================================== -->
+
+            <div
+                id="divorceFields"
+                class="event-fields"
+                {% if selected_event_type != "DIVORCE" %}style="display: none;"{% endif %}
+            >
+
+                <div class="form-section-title">
+
+                    <h3>
+                        Divorce Information
+                    </h3>
+
+                    <p>
+                        Record the spouse and the date the divorce
+                        occurred. Existing Registry information
+                        is not changed.
+                    </p>
+
+                </div>
+
+
+                <div class="form-grid">
+
+
+                    <div class="form-group form-group-full">
+
+                        <label for="divorce_spouse_full_name">
+                            Spouse Full Name
+                        </label>
+
+                        <input
+                            type="text"
+                            name="spouse_full_name"
+                            id="divorce_spouse_full_name"
+                            class="form-control divorce-input"
+                            placeholder="Enter spouse full name"
+                            value="{{ divorce_form.spouse_full_name.value|default:'' }}"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="divorce_date">
+                            Date of Divorce
+                        </label>
+
+                        <input
+                            type="date"
+                            name="date_of_divorce"
+                            id="divorce_date"
+                            class="form-control divorce-input"
+                            value="{{ divorce_form.date_of_divorce.value|default:'' }}"
+                        >
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 FORM ERRORS
+            ================================================== -->
+
+            {% if life_event_form.errors or marriage_form.errors or divorce_form.errors %}
+
+                <div class="form-errors">
+
+                    <strong>
+                        Please correct the following:
+                    </strong>
+
+
+                    {% for error in life_event_form.non_field_errors %}
+
+                        <p>
+                            {{ error }}
+                        </p>
+
+                    {% endfor %}
+
+
+                    {% if selected_event_type == "MARRIAGE" %}
+
+                        {% for field in life_event_form %}
+
+                            {% for error in field.errors %}
+
+                                <p>
+                                    {{ error }}
+                                </p>
+
+                            {% endfor %}
+
+                        {% endfor %}
+
+
+                        {% for field in marriage_form %}
+
+                            {% for error in field.errors %}
+
+                                <p>
+                                    {{ error }}
+                                </p>
+
+                            {% endfor %}
+
+                        {% endfor %}
+
+                    {% endif %}
+
+
+                    {% if selected_event_type == "DIVORCE" %}
+
+                        {% for field in life_event_form %}
+
+                            {% for error in field.errors %}
+
+                                <p>
+                                    {{ error }}
+                                </p>
+
+                            {% endfor %}
+
+                        {% endfor %}
+
+
+                        {% for field in divorce_form %}
+
+                            {% for error in field.errors %}
+
+                                <p>
+                                    {{ error }}
+                                </p>
+
+                            {% endfor %}
+
+                        {% endfor %}
+
+                    {% endif %}
+
+
+                    {% if selected_event_type == "DEATH" %}
+
+                        {% for field in life_event_form %}
+
+                            {% for error in field.errors %}
+
+                                <p>
+                                    {{ error }}
+                                </p>
+
+                            {% endfor %}
+
+                        {% endfor %}
+
+                    {% endif %}
+
+                </div>
+
+            {% endif %}
+
+
+            <!-- =================================================
+                 SAVE
+            ================================================== -->
+
+            <div
+                id="saveEventArea"
+                class="form-actions"
+                {% if not selected_event_type %}style="display: none;"{% endif %}
+            >
+
+                <a
+                    href="{% url 'life_events' %}"
+                    class="secondary-button"
+                >
+                    Cancel
+                </a>
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                >
+                    Save Life Event
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+{% endif %}
+```
+
+</div>
+
+<!-- =========================================================
+     EVENT TYPE JAVASCRIPT
+========================================================= -->
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const eventType = document.getElementById(
+            "event_type"
+        );
+
+        const commonFields = document.getElementById(
+            "commonEventFields"
+        );
+
+        const marriageFields = document.getElementById(
+            "marriageFields"
+        );
+
+        const divorceFields = document.getElementById(
+            "divorceFields"
+        );
+
+        const saveArea = document.getElementById(
+            "saveEventArea"
+        );
+
+        const eventDate = document.getElementById(
+            "event_date"
+        );
+
+
+        if (!eventType) {
+            return;
+        }
+
+
+        function updateEventFields() {
+
+            const selectedType = eventType.value;
+
+
+            /*
+             * COMMON EVENT FIELDS
+             */
+
+            commonFields.style.display =
+                selectedType
+                    ? "block"
+                    : "none";
+
+
+            /*
+             * MARRIAGE SECTION
+             */
+
+            marriageFields.style.display =
+                selectedType === "MARRIAGE"
+                    ? "block"
+                    : "none";
+
+
+            /*
+             * DIVORCE SECTION
+             */
+
+            divorceFields.style.display =
+                selectedType === "DIVORCE"
+                    ? "block"
+                    : "none";
+
+
+            /*
+             * SAVE BUTTON
+             */
+
+            saveArea.style.display =
+                selectedType
+                    ? "flex"
+                    : "none";
+
+
+            /*
+             * EVENT DATE
+             */
+
+            eventDate.disabled =
+                !selectedType;
+
+            eventDate.required =
+                !!selectedType;
+
+
+            /*
+             * MARRIAGE INPUTS
+             *
+             * Disabled when Marriage is not selected.
+             * This prevents hidden Marriage fields from
+             * being submitted with Divorce or Death.
+             */
+
+            marriageFields
+                .querySelectorAll("input")
+                .forEach(
+                    function (input) {
+
+                        input.disabled =
+                            selectedType !== "MARRIAGE";
+
+                        input.required =
+                            selectedType === "MARRIAGE";
+
+                    }
+                );
+
+
+            /*
+             * DIVORCE INPUTS
+             *
+             * Only these two fields are submitted
+             * when Divorce is selected.
+             */
+
+            divorceFields
+                .querySelectorAll("input")
+                .forEach(
+                    function (input) {
+
+                        input.disabled =
+                            selectedType !== "DIVORCE";
+
+                        input.required =
+                            selectedType === "DIVORCE";
+
+                    }
+                );
+
+        }
+
+
+        eventType.addEventListener(
+            "change",
+            updateEventFields
+        );
+
+
+        updateEventFields();
+
+    }
+
+);
+
+</script>
+
+{% endblock %}

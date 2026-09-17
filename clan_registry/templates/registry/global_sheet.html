@@ -1,0 +1,458 @@
+{% extends "registry/base.html" %}
+
+{% block title %}
+Global Sheet | UMUOTUTO Data Registry
+{% endblock %}
+
+{% block page_heading %}
+GLOBAL SHEET
+{% endblock %}
+
+{% block content %}
+
+<div class="global-page">
+
+```
+<!-- =====================================
+     HEADER
+====================================== -->
+
+<div class="global-header">
+
+    <div>
+
+        <p class="section-kicker">
+            UMUOTUTO DATA REGISTRY
+        </p>
+
+        <h1>Global Sheet</h1>
+
+        <p>
+            View and search all registered clan members
+            in the central registry.
+        </p>
+
+    </div>
+
+
+    <a
+        href="{% url 'new_registry' %}"
+        class="new-member-button"
+    >
+        <span>＋</span>
+        New Registry
+    </a>
+
+</div>
+
+
+<!-- =====================================
+     SUMMARY
+====================================== -->
+
+<div class="global-summary">
+
+    <div class="summary-card">
+
+        <div class="summary-icon">
+            ▦
+        </div>
+
+        <div>
+
+            <span>Total Members</span>
+
+            <strong>
+                {{ total_records }}
+            </strong>
+
+        </div>
+
+    </div>
+
+
+    <div class="summary-card">
+
+        <div class="summary-icon">
+            ◌
+        </div>
+
+        <div>
+
+            <span>Records Shown</span>
+
+            <strong>
+                {{ records|length }}
+            </strong>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================
+     SEARCH
+====================================== -->
+
+<div class="global-toolbar">
+
+    <form
+        method="GET"
+        class="search-form"
+    >
+
+        <div class="search-box">
+
+            <span class="search-icon">
+                🔎
+            </span>
+
+            <input
+                type="text"
+                name="search"
+                value="{{ search_query }}"
+                placeholder="Search by name, registry ID or family root..."
+            >
+
+        </div>
+
+
+        <button
+            type="submit"
+            class="search-button"
+        >
+            Search
+        </button>
+
+
+        {% if search_query %}
+
+            <a
+                href="{% url 'global_sheet' %}"
+                class="clear-search"
+            >
+                Clear
+            </a>
+
+        {% endif %}
+
+    </form>
+
+</div>
+
+
+<!-- =====================================
+     REGISTERED MEMBERS TABLE
+====================================== -->
+
+<div class="global-table-card">
+
+    <div class="table-header">
+
+        <div>
+
+            <h2>
+                Registered Members
+            </h2>
+
+            <p>
+                Central registry records
+            </p>
+
+        </div>
+
+    </div>
+
+
+    {% if records %}
+
+        <div class="table-wrapper">
+
+            <table class="global-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Registry ID
+                        </th>
+
+                        <th>
+                            Full Name
+                        </th>
+
+                        <th>
+                            Family Root
+                        </th>
+
+                        <th>
+                            Gender
+                        </th>
+
+                        <th>
+                            Date of Birth
+                        </th>
+
+                        <th>
+                            Phone
+                        </th>
+
+                        <th>
+                            Registered Date & Time
+                        </th>
+
+                        <th>
+                            Action
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for record in records %}
+
+                        <tr>
+
+                            <!-- REGISTRY ID -->
+
+                            <td>
+
+                                <span class="registry-id">
+                                    {{ record.aut_id }}
+                                </span>
+
+                            </td>
+
+
+                            <!-- FULL NAME -->
+
+                            <td>
+
+                                <div class="member-name">
+
+                                    <div class="member-avatar">
+                                        {{ record.firstname|first|upper }}
+                                    </div>
+
+
+                                    <div>
+
+                                        <strong>
+
+                                            {{ record.surname }}
+
+                                            {{ record.firstname }}
+
+                                            {% if record.middlename %}
+
+                                                {{ record.middlename }}
+
+                                            {% endif %}
+
+                                        </strong>
+
+
+                                        {% if record.nickname %}
+
+                                            <span>
+                                                "{{ record.nickname }}"
+                                            </span>
+
+                                        {% endif %}
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- FAMILY ROOT -->
+
+                            <td>
+
+                                {% if record.family_root %}
+
+                                    <span class="family-badge">
+                                        {{ record.get_family_root_display }}
+                                    </span>
+
+                                {% else %}
+
+                                    —
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- GENDER -->
+
+                            <td>
+
+                                {% if record.gender %}
+
+                                    {{ record.get_gender_display }}
+
+                                {% else %}
+
+                                    —
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- DATE OF BIRTH -->
+
+                            <td>
+
+                                {% if record.date_of_birth %}
+
+                                    {{ record.date_of_birth|date:"d M Y" }}
+
+                                {% else %}
+
+                                    —
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- PHONE -->
+
+                            <td>
+
+                                {% if record.phone_number %}
+
+                                    {{ record.phone_number }}
+
+                                {% else %}
+
+                                    —
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- REGISTERED DATE & TIME -->
+
+                            <td>
+
+                                <div class="registered-date">
+
+                                    <strong>
+                                        {{ record.aut_reg_date|date:"d M Y" }}
+                                    </strong>
+
+                                    <span>
+                                        {{ record.aut_reg_date|date:"h:i A" }}
+                                    </span>
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- ACTION -->
+
+                            <td>
+<a
+    href="{% url 'view_registry' record.pk %}"
+    class="view-button"
+>
+    View
+</a>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    {% else %}
+
+
+        <!-- =====================================
+             EMPTY STATE
+        ====================================== -->
+
+        <div class="empty-state">
+
+            <div class="empty-icon">
+                ▦
+            </div>
+
+
+            {% if search_query %}
+
+                <h3>
+                    No matching records
+                </h3>
+
+
+                <p>
+
+                    No clan member was found for
+
+                    "<strong>{{ search_query }}</strong>".
+
+                </p>
+
+
+                <a
+                    href="{% url 'global_sheet' %}"
+                    class="empty-button"
+                >
+                    View All Records
+                </a>
+
+
+            {% else %}
+
+                <h3>
+                    No Registry Records Yet
+                </h3>
+
+
+                <p>
+
+                    There are currently no clan members
+                    registered in the system.
+
+                </p>
+
+
+                <a
+                    href="{% url 'new_registry' %}"
+                    class="empty-button"
+                >
+                    ＋ Register First Member
+                </a>
+
+            {% endif %}
+
+        </div>
+
+    {% endif %}
+
+</div>
+```
+
+</div>
+
+{% endblock %}

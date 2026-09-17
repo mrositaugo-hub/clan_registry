@@ -1,0 +1,1 @@
+web: gunicorn clan_registry.wsgi:application

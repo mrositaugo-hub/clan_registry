@@ -1,0 +1,277 @@
+{% load static %}
+
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+```
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>
+    {% block title %}
+        Clan Registry
+    {% endblock %}
+</title>
+
+<link
+    rel="stylesheet"
+    href="{% static 'css/main.css' %}"
+>
+```
+
+</head>
+
+<body>
+
+```
+<div class="app">
+
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+
+        <!-- BRAND -->
+
+        <div class="brand">
+
+            <div class="brand-logo">
+
+                <div class="logo-placeholder">
+                    UMUOTUTO
+                </div>
+
+            </div>
+
+
+            <div class="brand-text">
+
+                <h1>
+                    DATA REGISTRY
+                </h1>
+
+                <p>
+                    UMUOTUTO
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- SIDEBAR NAVIGATION -->
+
+        <nav class="navigation">
+
+
+            <!-- DASHBOARD -->
+
+            <a
+                href="{% url 'dashboard' %}"
+                class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+            >
+
+                <span class="nav-icon">
+                    ⌂
+                </span>
+
+                <span>
+                    Dashboard
+                </span>
+
+            </a>
+
+
+            <!-- NEW REGISTRY -->
+
+            <a
+                href="{% url 'new_registry' %}"
+                class="nav-item {% if request.resolver_match.url_name == 'new_registry' %}active{% endif %}"
+            >
+
+                <span class="nav-icon">
+                    ＋
+                </span>
+
+                <span>
+                    New Registry
+                </span>
+
+            </a>
+
+
+            <!-- GLOBAL SHEET -->
+
+            <a
+                href="{% url 'global_sheet' %}"
+                class="nav-item {% if request.resolver_match.url_name == 'global_sheet' or request.resolver_match.url_name == 'view_registry' %}active{% endif %}"
+            >
+
+                <span class="nav-icon">
+                    ▦
+                </span>
+
+                <span>
+                    Global Sheet
+                </span>
+
+            </a>
+
+
+            <!-- LIFE EVENTS -->
+
+            <a
+                href="{% url 'life_events' %}"
+                class="nav-item {% if request.resolver_match.url_name == 'life_events' or request.resolver_match.url_name == 'new_life_event' or request.resolver_match.url_name == 'view_life_event' %}active{% endif %}"
+            >
+
+                <span class="nav-icon">
+                    ◷
+                </span>
+
+                <span>
+                    Life Events
+                </span>
+
+            </a>
+
+
+            <!-- HISTORIAN CHAT -->
+
+            <a
+                href="{% url 'historian_chat' %}"
+                class="nav-item {% if request.resolver_match.url_name == 'historian_chat' %}active{% endif %}"
+            >
+
+                <span class="nav-icon">
+                    ◌
+                </span>
+
+                <span>
+                    Historian Chat
+                </span>
+
+            </a>
+
+
+            <!-- ANCESTRY MAP -->
+
+            <a
+                href="{% url 'ancestry_map' %}"
+                class="nav-item {% if request.resolver_match.url_name == 'ancestry_map' %}active{% endif %}"
+            >
+
+                <span class="nav-icon">
+                    ⌘
+                </span>
+
+                <span>
+                    Ancestry Map
+                </span>
+
+            </a>
+
+
+        </nav>
+
+
+        <!-- SIDEBAR FOOTER -->
+
+        <div class="sidebar-footer">
+
+            <p>
+                Peace, Unity & Progress
+            </p>
+
+            <span>
+                UMUOTUTO Data Registry
+            </span>
+
+        </div>
+
+
+    </aside>
+
+
+    <!-- MAIN CONTENT -->
+
+    <main class="main-area">
+
+
+        <!-- TOP BAR -->
+
+        <header class="topbar">
+
+            <div>
+
+                <p class="page-label">
+                    DATA REGISTRY
+                </p>
+
+
+                <h2>
+
+                    {% block page_heading %}
+
+                        Registry Dashboard
+
+                    {% endblock %}
+
+                </h2>
+
+            </div>
+
+
+            <!-- USER AREA -->
+
+            <div class="user-area">
+
+                <div class="user-avatar">
+                    A
+                </div>
+
+
+                <div class="user-info">
+
+                    <strong>
+                        Administrator
+                    </strong>
+
+                    <span>
+                        Registry Manager
+                    </span>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <!-- PAGE CONTENT -->
+
+        <section class="content">
+
+            {% block content %}
+            {% endblock %}
+
+        </section>
+
+
+    </main>
+
+
+</div>
+```
+
+</body>
+
+</html>

@@ -1,0 +1,571 @@
+{% extends "registry/base.html" %}
+
+{% block title %}
+    Life Event | Clan Registry
+{% endblock %}
+
+{% block page_heading %}
+    Life Event Details
+{% endblock %}
+
+{% block content %}
+
+<div class="page-container">
+
+    <div class="page-intro">
+
+        <div>
+
+            <p class="section-kicker">
+                CLAN HISTORY
+            </p>
+
+            <h1>
+                Life Event Details
+            </h1>
+
+            <p class="section-description">
+                Historical information recorded for a registered
+                clan member.
+            </p>
+
+        </div>
+
+        <a
+            href="{% url 'life_events' %}"
+            class="secondary-button"
+        >
+            ← Back to Life Events
+        </a>
+
+    </div>
+
+
+    <!-- ==============================================
+         MEMBER INFORMATION
+    =============================================== -->
+
+    <div class="form-card">
+
+        <div class="form-card-header">
+
+            <div>
+
+                <span class="step-number">
+                    01
+                </span>
+
+                <div class="step-heading">
+
+                    <h2>
+                        Clan Member
+                    </h2>
+
+                    <p>
+                        The registered member associated with
+                        this historical event.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="selected-member-card">
+
+            <div class="selected-member-content">
+
+                <div class="selected-member-avatar">
+                    {{ event.member.firstname|first|upper }}
+                </div>
+
+                <div class="selected-member-info">
+
+                    <h2>
+                        {{ event.member.surname }}
+                        {{ event.member.firstname }}
+                        {{ event.member.middlename }}
+                    </h2>
+
+                    <p>
+                        Registry ID:
+                        <strong>
+                            {{ event.member.aut_id }}
+                        </strong>
+                    </p>
+
+                    <span>
+                        {{ event.member.family_root }}
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ==============================================
+         EVENT INFORMATION
+    =============================================== -->
+
+    <div class="form-card">
+
+        <div class="form-card-header">
+
+            <div>
+
+                <span class="step-number">
+                    02
+                </span>
+
+                <div class="step-heading">
+
+                    <h2>
+                        Event Information
+                    </h2>
+
+                    <p>
+                        Details of the historical event.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="form-grid">
+
+            <div class="form-group">
+
+                <label>
+                    Event Type
+                </label>
+
+                <div class="readonly-value">
+
+                    {{ event.get_event_type_display }}
+
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Event Date
+                </label>
+
+                <div class="readonly-value">
+
+                    {{ event.event_date|date:"F j, Y" }}
+
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Event Location
+                </label>
+
+                <div class="readonly-value">
+
+                    {% if event.event_location %}
+                        {{ event.event_location }}
+                    {% else %}
+                        Not provided
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ==============================================
+         MARRIAGE DETAILS
+    =============================================== -->
+
+    {% if event.event_type == "MARRIAGE" %}
+
+        <div class="form-card">
+
+            <div class="form-card-header">
+
+                <div>
+
+                    <span class="step-number">
+                        03
+                    </span>
+
+                    <div class="step-heading">
+
+                        <h2>
+                            Marriage Information
+                        </h2>
+
+                        <p>
+                            Historical marriage information
+                            associated with this event.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            {% if event.marriage_details %}
+
+                <div class="form-grid">
+
+                    <div class="form-group form-group-full">
+
+                        <label>
+                            Spouse Full Name
+                        </label>
+
+                        <div class="readonly-value">
+
+                            {{ event.marriage_details.spouse_full_name }}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Date of Marriage
+                        </label>
+
+                        <div class="readonly-value">
+
+                            {{ event.marriage_details.date_of_marriage|date:"F j, Y" }}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Spouse Clan
+                        </label>
+
+                        <div class="readonly-value">
+
+                            {% if event.marriage_details.spouse_clan %}
+                                {{ event.marriage_details.spouse_clan }}
+                            {% else %}
+                                Not provided
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Spouse Village
+                        </label>
+
+                        <div class="readonly-value">
+
+                            {% if event.marriage_details.spouse_village %}
+                                {{ event.marriage_details.spouse_village }}
+                            {% else %}
+                                Not provided
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Spouse State
+                        </label>
+
+                        <div class="readonly-value">
+
+                            {% if event.marriage_details.spouse_state %}
+                                {{ event.marriage_details.spouse_state }}
+                            {% else %}
+                                Not provided
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Spouse Country
+                        </label>
+
+                        <div class="readonly-value">
+
+                            {% if event.marriage_details.spouse_country %}
+                                {{ event.marriage_details.spouse_country }}
+                            {% else %}
+                                Not provided
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            {% else %}
+
+                <div class="empty-search">
+
+                    <h3>
+                        Marriage details unavailable
+                    </h3>
+
+                    <p>
+                        No additional marriage information was
+                        attached to this historical event.
+                    </p>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    {% endif %}
+
+
+    <!-- ==============================================
+         DIVORCE DETAILS
+    =============================================== -->
+
+    {% if event.event_type == "DIVORCE" %}
+
+        <div class="form-card">
+
+            <div class="form-card-header">
+
+                <div>
+
+                    <span class="step-number">
+                        03
+                    </span>
+
+                    <div class="step-heading">
+
+                        <h2>
+                            Divorce Information
+                        </h2>
+
+                        <p>
+                            Historical marriage and divorce
+                            information associated with this event.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            {% if event.divorce_details %}
+
+                <div class="form-grid">
+
+                    <div class="form-group form-group-full">
+
+                        <label>
+                            Spouse Full Name
+                        </label>
+
+                        <div class="readonly-value">
+
+                            {{ event.divorce_details.spouse_full_name }}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Date of Marriage
+                        </label>
+
+                        <div class="readonly-value">
+
+                            {{ event.divorce_details.date_of_marriage|date:"F j, Y" }}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Date of Divorce
+                        </label>
+
+                        <div class="readonly-value">
+
+                            {{ event.divorce_details.date_of_divorce|date:"F j, Y" }}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Spouse Clan
+                        </label>
+
+                        <div class="readonly-value">
+
+                            {% if event.divorce_details.spouse_clan %}
+                                {{ event.divorce_details.spouse_clan }}
+                            {% else %}
+                                Not provided
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Spouse Village
+                        </label>
+
+                        <div class="readonly-value">
+
+                            {% if event.divorce_details.spouse_village %}
+                                {{ event.divorce_details.spouse_village }}
+                            {% else %}
+                                Not provided
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Spouse State
+                        </label>
+
+                        <div class="readonly-value">
+
+                            {% if event.divorce_details.spouse_state %}
+                                {{ event.divorce_details.spouse_state }}
+                            {% else %}
+                                Not provided
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Spouse Country
+                        </label>
+
+                        <div class="readonly-value">
+
+                            {% if event.divorce_details.spouse_country %}
+                                {{ event.divorce_details.spouse_country }}
+                            {% else %}
+                                Not provided
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            {% else %}
+
+                <div class="empty-search">
+
+                    <h3>
+                        Divorce details unavailable
+                    </h3>
+
+                    <p>
+                        No additional divorce information was
+                        attached to this historical event.
+                    </p>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    {% endif %}
+
+
+    <!-- ==============================================
+         ACTIONS
+    =============================================== -->
+
+    <div class="form-actions">
+
+        <a
+            href="{% url 'life_events' %}"
+            class="secondary-button"
+        >
+            ← Back to Life Events
+        </a>
+
+        <a
+            href="{% url 'view_registry' event.member.pk %}"
+            class="primary-button"
+        >
+            View Member Registry
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}
