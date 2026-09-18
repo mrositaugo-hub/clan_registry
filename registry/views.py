@@ -415,7 +415,6 @@ def global_sheet(request):
             | Q(middlename__icontains=search_query)
             | Q(nickname__icontains=search_query)
             | Q(family_name__icontains=search_query)
-            | Q(family_lineage__icontains=search_query)
             | Q(immediate_fathers_name__icontains=search_query)
             | Q(mother_name__icontains=search_query)
             | Q(family_root__icontains=search_query)
@@ -544,7 +543,6 @@ def new_life_event(request):
                 | Q(middlename__icontains=term)
                 | Q(nickname__icontains=term)
                 | Q(family_name__icontains=term)
-                | Q(family_lineage__icontains=term)
                 | Q(immediate_fathers_name__icontains=term)
                 | Q(mother_name__icontains=term)
             )
@@ -917,13 +915,11 @@ def historian_chat(request):
 # ============================================================
 
 def ancestry_map(request):
-
     members = (
         Registry.objects
         .all()
         .order_by(
             "family_root",
-            "family_lineage",
             "family_name",
             "surname",
             "firstname",
@@ -933,9 +929,7 @@ def ancestry_map(request):
 
     family_roots = []
 
-    for root_code, root_name in (
-        Registry.ROOT_FAMILY_CHOICES
-    ):
+    for root_code, root_name in Registry.ROOT_FAMILY_CHOICES:
 
         root_members = (
             Registry.objects
@@ -943,7 +937,6 @@ def ancestry_map(request):
                 family_root=root_code
             )
             .order_by(
-                "family_lineage",
                 "family_name",
                 "surname",
                 "firstname",
@@ -951,15 +944,9 @@ def ancestry_map(request):
             )
         )
 
-        lineages = {}
+        families = {}
 
         for member in root_members:
-
-            lineage = (
-                member.family_lineage.strip()
-                if member.family_lineage
-                else "Unspecified Lineage"
-            )
 
             family_name = (
                 member.family_name.strip()
@@ -967,21 +954,16 @@ def ancestry_map(request):
                 else "Unspecified Family"
             )
 
-            if lineage not in lineages:
-                lineages[lineage] = {}
+            if family_name not in families:
+                families[family_name] = []
 
-            if family_name not in lineages[lineage]:
-                lineages[lineage][family_name] = []
-
-            lineages[lineage][family_name].append(
-                member
-            )
+            families[family_name].append(member)
 
         family_roots.append(
             {
                 "code": root_code,
                 "name": root_name,
-                "lineages": lineages,
+                "families": families,
                 "member_count": root_members.count(),
             }
         )

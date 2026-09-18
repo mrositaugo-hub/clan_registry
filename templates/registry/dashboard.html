@@ -1,4 +1,5 @@
 {% extends "registry/base.html" %}
+{% load static %}
 
 {% block title %}
     Dashboard | Clan Registry
@@ -10,22 +11,281 @@
 
 {% block content %}
 
+<style>
+    /* =========================================================
+       DASHBOARD INTRO & INTEGRATED BLENDED TV
+    ========================================================= */
+
+    .dashboard-intro {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 24px;
+        flex-wrap: wrap;
+    }
+
+    .dashboard-intro-main {
+        flex: 1;
+        min-width: 280px;
+    }
+
+    /* Left-aligned Header with Logo */
+    .dashboard-title-flex {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 8px;
+    }
+
+    .dashboard-intro-logo-left img {
+        width: 68px;
+        height: 68px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.25);
+        filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.25));
+        transition: transform 0.2s ease;
+    }
+
+    .dashboard-intro-logo-left img:hover {
+        transform: scale(1.05);
+    }
+
+    .dashboard-intro-side {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    /* Side Logo Styling (Rounded Circle) */
+    .dashboard-intro-logo img {
+        width: 110px;
+        height: 110px;
+        object-fit: cover;
+        border-radius: 50%;
+        filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.25));
+        transition: transform 0.2s ease;
+    }
+
+    .dashboard-intro-logo img:hover {
+        transform: scale(1.04);
+    }
+
+    /* Blended TV Widget Frame */
+    .tv-frame {
+        position: relative;
+        width: 280px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 14px;
+        padding: 10px 12px 14px;
+        cursor: pointer;
+        backdrop-filter: blur(4px);
+        transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .tv-frame:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.14);
+        border-color: rgba(255, 255, 255, 0.35);
+    }
+
+    .tv-header-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .tv-title {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 700;
+        font-size: 11px;
+        letter-spacing: 0.8px;
+        color: inherit;
+        opacity: 0.9;
+        text-transform: uppercase;
+    }
+
+    .tv-power-light {
+        width: 7px;
+        height: 7px;
+        background: #00ff66;
+        border-radius: 50%;
+        box-shadow: 0 0 6px #00ff66;
+    }
+
+    .tv-click-hint {
+        font-size: 10px;
+        color: inherit;
+        opacity: 0.75;
+        background: rgba(255, 255, 255, 0.12);
+        padding: 2px 6px;
+        border-radius: 8px;
+    }
+
+    .tv-screen {
+        position: relative;
+        height: 105px;
+        background: transparent;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px dashed rgba(255, 255, 255, 0.25);
+    }
+
+    /* Ultra-subtle overlay line */
+    .tv-screen::after {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: linear-gradient(
+            rgba(255, 255, 255, 0) 50%, 
+            rgba(0, 0, 0, 0.04) 50%
+        );
+        background-size: 100% 4px;
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    .tv-content {
+        position: absolute;
+        width: 100%;
+        padding: 10px 12px;
+        box-sizing: border-box;
+        color: inherit;
+        font-size: 12px;
+        line-height: 1.5;
+        animation: tvScrollUp 20s linear infinite;
+    }
+
+    .tv-screen:hover .tv-content {
+        animation-play-state: paused;
+    }
+
+    @keyframes tvScrollUp {
+        0% {
+            transform: translateY(105px);
+        }
+        100% {
+            transform: translateY(-100%);
+        }
+    }
+
+    /* =========================================================
+       EXPANDED STORY MODAL
+    ========================================================= */
+
+    .history-modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(18, 10, 28, 0.75);
+        backdrop-filter: blur(5px);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .history-modal-overlay.active {
+        display: flex;
+    }
+
+    .history-modal {
+        background: #ffffff;
+        border-radius: 16px;
+        max-width: 650px;
+        width: 100%;
+        max-height: 85vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        border: 1px solid #e2d6eb;
+        overflow: hidden;
+        animation: modalPop 0.25s ease-out;
+    }
+
+    @keyframes modalPop {
+        from {
+            transform: scale(0.92);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .history-modal-header {
+        padding: 18px 24px;
+        background: var(--purple, #4B1F7A);
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .history-modal-header h2 {
+        margin: 0;
+        font-size: 20px;
+    }
+
+    .history-modal-close {
+        background: rgba(255, 255, 255, 0.15);
+        border: none;
+        color: white;
+        font-size: 20px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+    }
+
+    .history-modal-close:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    .history-modal-body {
+        padding: 24px;
+        overflow-y: auto;
+        color: #333;
+        font-size: 15px;
+        line-height: 1.7;
+    }
+</style>
+
 <div class="dashboard-page">
 
     <!-- =========================================
-         DASHBOARD INTRO
+         DASHBOARD INTRO WITH LEFT LOGO & TV
          ========================================= -->
 
     <div class="dashboard-intro">
 
-        <div>
-            <p class="section-kicker">
-                UMUOTUTO DATA REGISTRY
-            </p>
+        <div class="dashboard-intro-main">
+            <div class="dashboard-title-flex">
+                <!-- LEFT LOGO -->
+                <div class="dashboard-intro-logo-left">
+                    <img src="{% static 'images/umu.jpeg' %}" alt="Umuotuto Ofuobi Logo">
+                </div>
 
-            <h1>
-                Welcome to the Registry
-            </h1>
+                <div>
+                    <p class="section-kicker">
+                        UMUOTUTO DATA REGISTRY
+                    </p>
+
+                    <h1>
+                        Welcome to the Registry
+                    </h1>
+                </div>
+            </div>
 
             <p>
                 A centralized record of clan members, family lineage
@@ -33,10 +293,38 @@
             </p>
         </div>
 
-        <div class="dashboard-intro-badge">
-            <span>PEACE</span>
-            <strong>UNITY</strong>
-            <small>&amp; PROGRESS</small>
+        <div class="dashboard-intro-side">
+            <!-- BACKGROUND HISTORY BLENDED WIDGET -->
+            <div class="tv-frame" id="tvWidget" role="button" aria-label="Expand Clan History">
+                <div class="tv-header-bar">
+                    <div class="tv-title">
+                        <span class="tv-power-light"></span>
+                        BACKGROUND HISTORY
+                    </div>
+                    <span class="tv-click-hint">Click to expand ↗</span>
+                </div>
+
+                <div class="tv-screen">
+                    <div class="tv-content" id="tvStoryContent">
+                        <p>
+                            <strong>The Heritage of Umuotuto</strong><br>
+                            Umuotuto is a proud and historic clan anchored on faith, peace, and progress. 
+                            Founded generations ago by revered ancestors, the clan has grown into three main root families 
+                            holding together a rich legacy of community strength and collective wisdom.
+                        </p>
+                        <p>
+                            Through times of triumph and challenge, our ancestors preserved values of mutual support, respect for lineage, 
+                            and devotion to family. Today, this digital registry serves to record, honor, and pass on our vibrant history 
+                            to every generation to come.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CLAN LOGO (RIGHT SIDE) -->
+            <div class="dashboard-intro-logo">
+                <img src="{% static 'images/umu.jpeg' %}" alt="Umuotuto Ofuobi Logo">
+            </div>
         </div>
 
     </div>
@@ -533,5 +821,48 @@
     </div>
 
 </div>
+
+
+<!-- =========================================
+     EXPANDED STORY MODAL
+     ========================================= -->
+
+<div class="history-modal-overlay" id="historyModalOverlay">
+    <div class="history-modal">
+        <div class="history-modal-header">
+            <h2>Clan History &amp; Background</h2>
+            <button type="button" class="history-modal-close" id="closeHistoryModal">✕</button>
+        </div>
+        <div class="history-modal-body" id="expandedStoryText">
+            <!-- Full story populates here -->
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const tvWidget = document.getElementById("tvWidget");
+        const tvStoryContent = document.getElementById("tvStoryContent");
+        const historyModalOverlay = document.getElementById("historyModalOverlay");
+        const expandedStoryText = document.getElementById("expandedStoryText");
+        const closeHistoryModal = document.getElementById("closeHistoryModal");
+
+        tvWidget.addEventListener("click", function () {
+            expandedStoryText.innerHTML = tvStoryContent.innerHTML;
+            historyModalOverlay.classList.add("active");
+        });
+
+        closeHistoryModal.addEventListener("click", function () {
+            historyModalOverlay.classList.remove("active");
+        });
+
+        historyModalOverlay.addEventListener("click", function (e) {
+            if (e.target === historyModalOverlay) {
+                historyModalOverlay.classList.remove("active");
+            }
+        });
+    });
+</script>
 
 {% endblock %}

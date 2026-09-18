@@ -111,11 +111,6 @@ class Registry(models.Model):
     # FAMILY / LINEAGE INFORMATION
     # ========================================================
 
-    family_lineage = models.CharField(
-        max_length=200,
-        blank=True,
-    )
-
     family_name = models.CharField(
         max_length=200,
         blank=True,

@@ -30,7 +30,6 @@ class RegistryForm(forms.ModelForm):
             "date_of_birth",
             "place_of_birth",
 
-            "family_lineage",
             "family_name",
             "immediate_fathers_name",
             "mother_name",

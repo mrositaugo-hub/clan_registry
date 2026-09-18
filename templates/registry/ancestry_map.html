@@ -205,7 +205,7 @@ Ancestry Map
 
     #ancestryMap {
         display: block;
-        min-width: 1100px;
+        min-width: 950px;
         width: 100%;
         min-height: 620px;
         height: auto;
@@ -231,11 +231,6 @@ Ancestry Map
     .root-text {
         font-size: 16px;
         font-weight: 800;
-    }
-
-    .lineage-text {
-        font-size: 14px;
-        font-weight: 700;
     }
 
     .family-text {
@@ -304,10 +299,6 @@ Ancestry Map
 
     .legend-root {
         background: #AC5D1A;
-    }
-
-    .legend-lineage {
-        background: #7C4D9F;
     }
 
     .legend-family {
@@ -417,7 +408,7 @@ Ancestry Map
             <h2>Ancestry Map</h2>
 
             <p>
-                Explore the recorded roots, lineages, families and
+                Explore the recorded roots, families and
                 members of UMUOTUTO.
             </p>
         </div>
@@ -537,7 +528,7 @@ Ancestry Map
                 <br><br>
 
                 Root families branch out horizontally to the right,
-                followed by lineages, family names, and registered members.
+                followed by family names, and registered members.
 
                 <br><br>
 
@@ -572,7 +563,7 @@ Ancestry Map
 
                 <svg
                     id="ancestryMap"
-                    viewBox="0 0 1460 750"
+                    viewBox="0 0 1200 750"
                     role="img"
                     aria-label="UMUOTUTO ancestry tree"
                     xmlns="http://www.w3.org/2000/svg"
@@ -658,17 +649,6 @@ Ancestry Map
                 <div class="legend-item">
 
                     <span
-                        class="legend-colour legend-lineage"
-                    ></span>
-
-                    Family Lineage
-
-                </div>
-
-
-                <div class="legend-item">
-
-                    <span
                         class="legend-colour legend-family"
                     ></span>
 
@@ -727,19 +707,6 @@ Ancestry Map
                         </span>
 
                         <strong id="detailsRoot">
-                            —
-                        </strong>
-
-                    </div>
-
-
-                    <div class="detail-item">
-
-                        <span>
-                            Family Lineage
-                        </span>
-
-                        <strong id="detailsLineage">
                             —
                         </strong>
 
@@ -852,9 +819,6 @@ const ancestryMembers = [
         rootName:
             "{{ member.get_family_root_display|default:''|escapejs }}",
 
-        lineage:
-            "{{ member.family_lineage|default:''|escapejs }}",
-
         familyName:
             "{{ member.family_name|default:''|escapejs }}",
 
@@ -940,9 +904,6 @@ const detailsId =
 const detailsRoot =
     document.getElementById("detailsRoot");
 
-const detailsLineage =
-    document.getElementById("detailsLineage");
-
 const detailsFamily =
     document.getElementById("detailsFamily");
 
@@ -973,21 +934,16 @@ const ROOT_X = 370;
 const ROOT_WIDTH = 230;
 const ROOT_HEIGHT = 65;
 
-const LINEAGE_X = 660;
-const LINEAGE_WIDTH = 210;
-const LINEAGE_HEIGHT = 58;
-
-const FAMILY_X = 930;
-const FAMILY_WIDTH = 200;
+const FAMILY_X = 660;
+const FAMILY_WIDTH = 210;
 const FAMILY_HEIGHT = 54;
 
-const MEMBER_X = 1190;
+const MEMBER_X = 930;
 const MEMBER_WIDTH = 190;
 const MEMBER_HEIGHT = 70;
 
 const MEMBER_GAP = 20;
 const FAMILY_GAP = 40;
-const LINEAGE_GAP = 60;
 const ROOT_GAP = 90;
 
 
@@ -1441,9 +1397,7 @@ function addNode(
                 (
                     type === "root"
                         ? "root-text"
-                        : type === "lineage"
-                            ? "lineage-text"
-                            : "family-text"
+                        : "family-text"
                 ),
             textColour
         );
@@ -1540,11 +1494,6 @@ function showMemberDetails(
         "Not available";
 
 
-    detailsLineage.textContent =
-        member.lineage ||
-        "Not recorded";
-
-
     detailsFamily.textContent =
         member.familyName ||
         "Not recorded";
@@ -1607,8 +1556,6 @@ function getFilteredMembers() {
 
                 member.rootCode,
 
-                member.lineage,
-
                 member.familyName,
 
                 member.father,
@@ -1664,7 +1611,7 @@ function buildTreeStructure(
                 name:
                     root.name,
 
-                lineages:
+                families:
                     {}
 
             };
@@ -1689,11 +1636,6 @@ function buildTreeStructure(
             }
 
 
-            const lineage =
-                member.lineage ||
-                "Unspecified Lineage";
-
-
             const family =
                 member.familyName ||
                 "Unspecified Family";
@@ -1701,28 +1643,17 @@ function buildTreeStructure(
 
             if (
                 !roots[rootCode]
-                    .lineages[lineage]
+                    .families[family]
             ) {
 
                 roots[rootCode]
-                    .lineages[lineage] = {};
-
-            }
-
-
-            if (
-                !roots[rootCode]
-                    .lineages[lineage][family]
-            ) {
-
-                roots[rootCode]
-                    .lineages[lineage][family] = [];
+                    .families[family] = [];
 
             }
 
 
             roots[rootCode]
-                .lineages[lineage][family]
+                .families[family]
                 .push(member);
 
         }
@@ -1764,19 +1695,21 @@ function calculateFamilyHeight(
 }
 
 
-function calculateLineageHeight(
-    lineage
+function calculateRootHeight(
+    root
 ) {
 
     const familyNames =
-        Object.keys(lineage);
+        Object.keys(
+            root.families
+        );
 
 
     if (
         familyNames.length === 0
     ) {
 
-        return LINEAGE_HEIGHT + 20;
+        return ROOT_HEIGHT + 40;
 
     }
 
@@ -1789,7 +1722,9 @@ function calculateLineageHeight(
 
             height +=
                 calculateFamilyHeight(
-                    lineage[familyName]
+                    root.families[
+                        familyName
+                    ]
                 ) +
                 FAMILY_GAP;
 
@@ -1798,55 +1733,9 @@ function calculateLineageHeight(
 
 
     return Math.max(
-        LINEAGE_HEIGHT,
-        height -
-        FAMILY_GAP
-    );
-
-}
-
-
-function calculateRootHeight(
-    root
-) {
-
-    const lineageNames =
-        Object.keys(
-            root.lineages
-        );
-
-
-    if (
-        lineageNames.length === 0
-    ) {
-
-        return ROOT_HEIGHT + 40;
-
-    }
-
-
-    let height = 0;
-
-
-    lineageNames.forEach(
-        lineageName => {
-
-            height +=
-                calculateLineageHeight(
-                    root.lineages[
-                        lineageName
-                    ]
-                ) +
-                LINEAGE_GAP;
-
-        }
-    );
-
-
-    return Math.max(
         ROOT_HEIGHT + 40,
         height -
-        LINEAGE_GAP
+        FAMILY_GAP
     );
 
 }
@@ -1864,7 +1753,7 @@ function autoFitMap(
     if (!mapScrollContainer) return;
 
     const containerWidth =
-        mapScrollContainer.clientWidth || 1100;
+        mapScrollContainer.clientWidth || 950;
 
     const containerHeight =
         mapScrollContainer.clientHeight || 620;
@@ -1975,7 +1864,7 @@ function renderMap() {
         );
 
 
-    const totalWidth = 1460;
+    const totalWidth = 1200;
 
 
     const centerY =
@@ -2105,34 +1994,34 @@ function renderMap() {
             );
 
 
-            const lineageNames =
+            const familyNames =
                 Object.keys(
-                    root.lineages
+                    root.families
                 );
 
 
-            let lineageCurrentY =
+            let familyCurrentY =
                 currentY;
 
 
-            lineageNames.forEach(
-                lineageName => {
+            familyNames.forEach(
+                familyName => {
 
-                    const lineage =
-                        root.lineages[
-                            lineageName
+                    const familyMembers =
+                        root.families[
+                            familyName
                         ];
 
 
-                    const lineageHeight =
-                        calculateLineageHeight(
-                            lineage
+                    const familyHeight =
+                        calculateFamilyHeight(
+                            familyMembers
                         );
 
 
-                    const lineageCenterY =
-                        lineageCurrentY +
-                        lineageHeight / 2;
+                    const familyCenterY =
+                        familyCurrentY +
+                        familyHeight / 2;
 
 
                     addTreeBranch(
@@ -2142,13 +2031,13 @@ function renderMap() {
 
                         rootCenterY,
 
-                        LINEAGE_X,
+                        FAMILY_X,
 
-                        lineageCenterY,
+                        familyCenterY,
 
-                        rootColour,
+                        "#8C6B35",
 
-                        5
+                        4
 
                     );
 
@@ -2157,29 +2046,29 @@ function renderMap() {
                         {
 
                             x:
-                                LINEAGE_X,
+                                FAMILY_X,
 
                             y:
-                                lineageCenterY -
-                                LINEAGE_HEIGHT / 2,
+                                familyCenterY -
+                                FAMILY_HEIGHT / 2,
 
                             width:
-                                LINEAGE_WIDTH,
+                                FAMILY_WIDTH,
 
                             height:
-                                LINEAGE_HEIGHT,
+                                FAMILY_HEIGHT,
 
                             title:
-                                lineageName,
+                                familyName,
 
                             subtitle:
-                                "LINEAGE",
+                                "FAMILY",
 
                             type:
-                                "lineage",
+                                "family",
 
                             colour:
-                                "#7C4D9F",
+                                "#8C6B35",
 
                             textColour:
                                 "#FFFFFF"
@@ -2188,50 +2077,47 @@ function renderMap() {
                     );
 
 
-                    const familyNames =
-                        Object.keys(
-                            lineage
-                        );
+                    const memberCountInFamily =
+                        familyMembers.length;
 
 
-                    let familyCurrentY =
-                        lineageCurrentY;
+                    const membersTotalHeight =
+                        memberCountInFamily *
+                        MEMBER_HEIGHT +
+                        (
+                            memberCountInFamily -
+                            1
+                        ) *
+                        MEMBER_GAP;
 
 
-                    familyNames.forEach(
-                        familyName => {
-
-                            const familyMembers =
-                                lineage[
-                                    familyName
-                                ];
+                    let memberStartY =
+                        familyCenterY -
+                        membersTotalHeight / 2;
 
 
-                            const familyHeight =
-                                calculateFamilyHeight(
-                                    familyMembers
-                                );
+                    familyMembers.forEach(
+                        member => {
 
-
-                            const familyCenterY =
-                                familyCurrentY +
-                                familyHeight / 2;
+                            const memberCenterY =
+                                memberStartY +
+                                MEMBER_HEIGHT / 2;
 
 
                             addTreeBranch(
 
-                                LINEAGE_X +
-                                    LINEAGE_WIDTH,
-
-                                lineageCenterY,
-
-                                FAMILY_X,
+                                FAMILY_X +
+                                    FAMILY_WIDTH,
 
                                 familyCenterY,
 
+                                MEMBER_X,
+
+                                memberCenterY,
+
                                 "#8C6B35",
 
-                                4
+                                3
 
                             );
 
@@ -2240,140 +2126,52 @@ function renderMap() {
                                 {
 
                                     x:
-                                        FAMILY_X,
-
-                                    y:
-                                        familyCenterY -
-                                        FAMILY_HEIGHT / 2,
-
-                                    width:
-                                        FAMILY_WIDTH,
-
-                                    height:
-                                        FAMILY_HEIGHT,
-
-                                    title:
-                                        familyName,
-
-                                    subtitle:
-                                        "FAMILY",
-
-                                    type:
-                                        "family",
-
-                                    colour:
-                                        "#8C6B35",
-
-                                    textColour:
-                                        "#FFFFFF"
-
-                                }
-                            );
-
-
-                            const memberCountInFamily =
-                                familyMembers.length;
-
-
-                            const membersTotalHeight =
-                                memberCountInFamily *
-                                MEMBER_HEIGHT +
-                                (
-                                    memberCountInFamily -
-                                    1
-                                ) *
-                                MEMBER_GAP;
-
-
-                            let memberStartY =
-                                familyCenterY -
-                                membersTotalHeight / 2;
-
-
-                            familyMembers.forEach(
-                                member => {
-
-                                    const memberCenterY =
-                                        memberStartY +
-                                        MEMBER_HEIGHT / 2;
-
-
-                                    addTreeBranch(
-
-                                        FAMILY_X +
-                                            FAMILY_WIDTH,
-
-                                        familyCenterY,
-
                                         MEMBER_X,
 
-                                        memberCenterY,
+                                    y:
+                                        memberStartY,
 
-                                        "#8C6B35",
+                                    width:
+                                        MEMBER_WIDTH,
 
-                                        3
+                                    height:
+                                        MEMBER_HEIGHT,
 
-                                    );
+                                    title:
+                                        member.name ||
+                                        "Unnamed Member",
 
+                                    subtitle:
+                                        member.id ||
+                                        "No ID",
 
-                                    addNode(
-                                        {
+                                    type:
+                                        "member",
 
-                                            x:
-                                                MEMBER_X,
+                                    colour:
+                                        "#EADFF0",
 
-                                            y:
-                                                memberStartY,
+                                    textColour:
+                                        "#351354",
 
-                                            width:
-                                                MEMBER_WIDTH,
-
-                                            height:
-                                                MEMBER_HEIGHT,
-
-                                            title:
-                                                member.name ||
-                                                "Unnamed Member",
-
-                                            subtitle:
-                                                member.id ||
-                                                "No ID",
-
-                                            type:
-                                                "member",
-
-                                            colour:
-                                                "#EADFF0",
-
-                                            textColour:
-                                                "#351354",
-
-                                            member:
-                                                member
-
-                                        }
-                                    );
-
-
-                                    memberStartY +=
-                                        MEMBER_HEIGHT +
-                                        MEMBER_GAP;
+                                    member:
+                                        member
 
                                 }
                             );
 
 
-                            familyCurrentY +=
-                                familyHeight +
-                                FAMILY_GAP;
+                            memberStartY +=
+                                MEMBER_HEIGHT +
+                                MEMBER_GAP;
 
                         }
                     );
 
 
-                    lineageCurrentY +=
-                        lineageHeight +
-                        LINEAGE_GAP;
+                    familyCurrentY +=
+                        familyHeight +
+                        FAMILY_GAP;
 
                 }
             );
