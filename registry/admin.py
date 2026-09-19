@@ -6,7 +6,6 @@ from .models import (
     DivorceDetails,
 )
 
-
 # ============================================================
 # REGISTRY ADMIN
 # ============================================================
@@ -40,7 +39,6 @@ class RegistryAdmin(admin.ModelAdmin):
         "aut_reg_date",
     )
 
-
 # ============================================================
 # LIFE EVENT ADMIN
 # ============================================================
@@ -64,7 +62,6 @@ class LifeEventAdmin(admin.ModelAdmin):
         "event_location",
     )
 
-
 # ============================================================
 # MARRIAGE DETAILS ADMIN
 # ============================================================
@@ -81,7 +78,6 @@ class MarriageDetailsAdmin(admin.ModelAdmin):
         "member__firstname",
         "spouse_full_name",
     )
-
 
 # ============================================================
 # DIVORCE DETAILS ADMIN
