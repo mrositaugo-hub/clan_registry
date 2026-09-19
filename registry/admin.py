@@ -1,6 +1,16 @@
 from django.contrib import admin
-from .models import Registry, LifeEvent, MarriageDetails, DivorceDetails
 
+from .models import (
+    Registry,
+    LifeEvent,
+    MarriageDetails,
+    DivorceDetails,
+)
+
+
+# ============================================================
+# REGISTRY ADMIN
+# ============================================================
 
 @admin.register(Registry)
 class RegistryAdmin(admin.ModelAdmin):
@@ -13,7 +23,13 @@ class RegistryAdmin(admin.ModelAdmin):
         "marital_status",
         "phone_number",
     )
-    list_filter = ("family_root", "gender", "marital_status")
+
+    list_filter = (
+        "family_root",
+        "gender",
+        "marital_status",
+    )
+
     search_fields = (
         "aut_id",
         "surname",
@@ -22,13 +38,31 @@ class RegistryAdmin(admin.ModelAdmin):
         "family_root",
         "phone_number",
     )
-    readonly_fields = ("aut_id", "aut_reg_date")
 
+    readonly_fields = (
+        "aut_id",
+        "aut_reg_date",
+    )
+
+
+# ============================================================
+# LIFE EVENT ADMIN
+# ============================================================
 
 @admin.register(LifeEvent)
 class LifeEventAdmin(admin.ModelAdmin):
-    list_display = ("member", "event_type", "event_date", "event_location")
-    list_filter = ("event_type", "event_date")
+    list_display = (
+        "member",
+        "event_type",
+        "event_date",
+        "event_location",
+    )
+
+    list_filter = (
+        "event_type",
+        "event_date",
+    )
+
     search_fields = (
         "member__surname",
         "member__firstname",
@@ -37,9 +71,18 @@ class LifeEventAdmin(admin.ModelAdmin):
     )
 
 
+# ============================================================
+# MARRIAGE DETAILS ADMIN
+# ============================================================
+
 @admin.register(MarriageDetails)
 class MarriageDetailsAdmin(admin.ModelAdmin):
-    list_display = ("member", "spouse_full_name", "date_of_marriage")
+    list_display = (
+        "member",
+        "spouse_full_name",
+        "date_of_marriage",
+    )
+
     search_fields = (
         "member__surname",
         "member__firstname",
@@ -47,9 +90,17 @@ class MarriageDetailsAdmin(admin.ModelAdmin):
     )
 
 
+# ============================================================
+# DIVORCE DETAILS ADMIN
+# ============================================================
+
 @admin.register(DivorceDetails)
 class DivorceDetailsAdmin(admin.ModelAdmin):
-    list_display = ("marriage", "date_of_divorce")
+    list_display = (
+        "marriage",
+        "date_of_divorce",
+    )
+
     search_fields = (
         "marriage__member__surname",
         "marriage__member__firstname",
