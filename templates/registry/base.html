@@ -6,38 +6,38 @@
 
 <head>
 
-```
-<meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
->
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-<title>
-    {% block title %}
-        Clan Registry
-    {% endblock %}
-</title>
+    <title>
+        {% block title %}
+            Clan Registry
+        {% endblock %}
+    </title>
 
-<link
-    rel="stylesheet"
-    href="{% static 'css/main.css' %}"
->
-```
+    <link
+        rel="stylesheet"
+        href="{% static 'css/main.css' %}"
+    >
 
 </head>
 
 <body>
 
-```
 <div class="app">
+
+    <!-- MOBILE OVERLAY -->
+
+    <div class="mobile-overlay"></div>
 
 
     <!-- SIDEBAR -->
 
     <aside class="sidebar">
-
 
         <!-- BRAND -->
 
@@ -70,7 +70,6 @@
         <!-- SIDEBAR NAVIGATION -->
 
         <nav class="navigation">
-
 
             <!-- DASHBOARD -->
 
@@ -179,7 +178,6 @@
 
             </a>
 
-
         </nav>
 
 
@@ -197,7 +195,6 @@
 
         </div>
 
-
     </aside>
 
 
@@ -205,10 +202,24 @@
 
     <main class="main-area">
 
-
         <!-- TOP BAR -->
 
         <header class="topbar">
+
+
+            <!-- MOBILE MENU BUTTON -->
+
+            <button
+                type="button"
+                class="mobile-menu-button"
+                aria-label="Open navigation"
+                aria-expanded="false"
+            >
+                ☰
+            </button>
+
+
+            <!-- PAGE TITLE -->
 
             <div>
 
@@ -268,9 +279,92 @@
 
     </main>
 
-
 </div>
-```
+
+
+<!-- MOBILE SIDEBAR SCRIPT -->
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const sidebar = document.querySelector(".sidebar");
+    const overlay = document.querySelector(".mobile-overlay");
+    const menuButton = document.querySelector(".mobile-menu-button");
+    const navLinks = document.querySelectorAll(".sidebar .nav-item");
+
+
+    function openMobileMenu() {
+
+        sidebar.classList.add("mobile-open");
+        overlay.classList.add("active");
+
+        menuButton.setAttribute("aria-expanded", "true");
+
+        document.body.classList.add("mobile-menu-active");
+
+    }
+
+
+    function closeMobileMenu() {
+
+        sidebar.classList.remove("mobile-open");
+        overlay.classList.remove("active");
+
+        menuButton.setAttribute("aria-expanded", "false");
+
+        document.body.classList.remove("mobile-menu-active");
+
+    }
+
+
+    menuButton.addEventListener("click", function () {
+
+        if (sidebar.classList.contains("mobile-open")) {
+
+            closeMobileMenu();
+
+        } else {
+
+            openMobileMenu();
+
+        }
+
+    });
+
+
+    overlay.addEventListener("click", function () {
+
+        closeMobileMenu();
+
+    });
+
+
+    navLinks.forEach(function (link) {
+
+        link.addEventListener("click", function () {
+
+            closeMobileMenu();
+
+        });
+
+    });
+
+
+    window.addEventListener("resize", function () {
+
+        if (window.innerWidth > 600) {
+
+            closeMobileMenu();
+
+        }
+
+    });
+
+});
+
+</script>
+
 
 </body>
 

@@ -2434,18 +2434,87 @@ RESPONSIVE - 700px
 
 @media (max-width: 600px) {
 
+    /* -----------------------------------------
+       MOBILE SIDEBAR DRAWER
+    ----------------------------------------- */
+
     .sidebar {
-        width: 72px;
+        width: 260px;
+        left: 0;
+        transform: translateX(-100%);
+        z-index: 1000;
+        transition: transform 0.25s ease;
+    }
+
+    .sidebar.mobile-open {
+        transform: translateX(0);
     }
 
     .main-area {
-        margin-left: 72px;
-        width: calc(100% - 72px);
+        margin-left: 0;
+        width: 100%;
         min-width: 0;
     }
 
+    /* -----------------------------------------
+       MOBILE OVERLAY
+    ----------------------------------------- */
+
+    .mobile-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 999;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition:
+            opacity 0.25s ease,
+            visibility 0.25s ease;
+    }
+
+    .mobile-overlay.active {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    /* -----------------------------------------
+       MOBILE MENU BUTTON
+    ----------------------------------------- */
+
+    .mobile-menu-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        margin-right: 10px;
+        padding: 0;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: inherit;
+        font-size: 24px;
+        line-height: 1;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    .mobile-menu-button:hover {
+        background: rgba(0, 0, 0, 0.06);
+    }
+
+    /* -----------------------------------------
+       TOPBAR
+    ----------------------------------------- */
+
     .topbar {
         padding: 0 14px;
+    }
+
+    .topbar > div:first-of-type {
+        min-width: 0;
     }
 
     .topbar h2 {
@@ -2453,14 +2522,25 @@ RESPONSIVE - 700px
         line-height: 1.2;
     }
 
+    /* -----------------------------------------
+       CONTENT
+    ----------------------------------------- */
+
     .content {
-        padding: 15px;
+        width: 100%;
+        max-width: 100%;
         min-width: 0;
+        padding: 15px;
+        box-sizing: border-box;
         overflow-x: hidden;
     }
 
+    /* -----------------------------------------
+       BRAND
+    ----------------------------------------- */
+
     .brand {
-        padding: 18px 8px;
+        padding: 18px 16px;
     }
 
     .brand-logo {
@@ -2468,12 +2548,23 @@ RESPONSIVE - 700px
         height: 48px;
     }
 
+    /* -----------------------------------------
+       NAVIGATION
+    ----------------------------------------- */
+
     .navigation {
-        padding: 18px 8px;
+        width: 100%;
+        padding: 18px 12px;
+        box-sizing: border-box;
     }
 
     .nav-item {
-        padding: 12px 8px;
+        justify-content: flex-start;
+        padding: 12px 14px;
+    }
+
+    .nav-item span:last-child {
+        display: inline;
     }
 
     .nav-icon {
@@ -2482,7 +2573,15 @@ RESPONSIVE - 700px
         flex-shrink: 0;
     }
 
-    /* Prevent wide children from forcing page overflow */
+    .sidebar-footer {
+        display: block;
+        padding: 15px;
+    }
+
+    /* -----------------------------------------
+       PREVENT HORIZONTAL OVERFLOW
+    ----------------------------------------- */
+
     .registry-page,
     .dashboard-page,
     .life-events-page,
@@ -2499,42 +2598,10 @@ RESPONSIVE - 700px
         max-width: 100%;
     }
 
-    /* Keep text inside the available phone width */
-    .registry-intro h1,
-    .global-header h1,
-    .page-intro h1,
-    .dashboard-intro h1 {
-        overflow-wrap: anywhere;
-    }
-
-    /* Prevent buttons and inputs from exceeding the viewport */
     input,
     select,
     textarea,
     button {
-        max-width: 100%;
-        box-sizing: border-box;
-    }
-
-    /* Make form controls comfortably usable on phones */
-    .form-field,
-    .form-group,
-    .search-box,
-    .search-input-wrapper {
-        min-width: 0;
-        width: 100%;
-    }
-
-    /* Keep action buttons inside the screen */
-    .form-actions,
-    .wizard-actions {
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .form-actions .primary-button,
-    .form-actions .secondary-button,
-    .wizard-actions button {
         max-width: 100%;
         box-sizing: border-box;
     }
