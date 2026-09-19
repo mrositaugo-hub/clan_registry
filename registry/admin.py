@@ -4,8 +4,14 @@ from .models import (
     LifeEvent,
     MarriageDetails,
     DivorceDetails,
-)# ============================================================
-# REGISTRY ADMIN# ============================================================@admin.register(Registry)
+)
+
+
+# ============================================================
+# REGISTRY ADMIN
+# ============================================================
+
+@admin.register(Registry)
 class RegistryAdmin(admin.ModelAdmin):
     list_display = (
         "aut_id",
@@ -33,9 +39,12 @@ class RegistryAdmin(admin.ModelAdmin):
         "aut_id",
         "aut_reg_date",
     )
+
+
 # ============================================================
 # LIFE EVENT ADMIN
 # ============================================================
+
 @admin.register(LifeEvent)
 class LifeEventAdmin(admin.ModelAdmin):
     list_display = (
@@ -54,9 +63,12 @@ class LifeEventAdmin(admin.ModelAdmin):
         "member__aut_id",
         "event_location",
     )
+
+
 # ============================================================
 # MARRIAGE DETAILS ADMIN
 # ============================================================
+
 @admin.register(MarriageDetails)
 class MarriageDetailsAdmin(admin.ModelAdmin):
     list_display = (
@@ -69,9 +81,12 @@ class MarriageDetailsAdmin(admin.ModelAdmin):
         "member__firstname",
         "spouse_full_name",
     )
+
+
 # ============================================================
 # DIVORCE DETAILS ADMIN
 # ============================================================
+
 @admin.register(DivorceDetails)
 class DivorceDetailsAdmin(admin.ModelAdmin):
     list_display = (
