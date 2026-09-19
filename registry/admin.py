@@ -1,5 +1,4 @@
 from django.contrib import admin
-
 from .models import (
     Registry,
     LifeEvent,
@@ -23,13 +22,11 @@ class RegistryAdmin(admin.ModelAdmin):
         "marital_status",
         "phone_number",
     )
-
     list_filter = (
         "family_root",
         "gender",
         "marital_status",
     )
-
     search_fields = (
         "aut_id",
         "surname",
@@ -38,7 +35,6 @@ class RegistryAdmin(admin.ModelAdmin):
         "family_root",
         "phone_number",
     )
-
     readonly_fields = (
         "aut_id",
         "aut_reg_date",
@@ -57,12 +53,10 @@ class LifeEventAdmin(admin.ModelAdmin):
         "event_date",
         "event_location",
     )
-
     list_filter = (
         "event_type",
         "event_date",
     )
-
     search_fields = (
         "member__surname",
         "member__firstname",
@@ -82,7 +76,6 @@ class MarriageDetailsAdmin(admin.ModelAdmin):
         "spouse_full_name",
         "date_of_marriage",
     )
-
     search_fields = (
         "member__surname",
         "member__firstname",
@@ -100,7 +93,6 @@ class DivorceDetailsAdmin(admin.ModelAdmin):
         "marriage",
         "date_of_divorce",
     )
-
     search_fields = (
         "marriage__member__surname",
         "marriage__member__firstname",
