@@ -19,7 +19,7 @@ class RegistryAdmin(admin.ModelAdmin):
         "surname",
         "firstname",
         "phone_number",
-        "family_name",
+        "family_root",
     )
     readonly_fields = ("aut_id", "aut_reg_date")
 
