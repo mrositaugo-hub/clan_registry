@@ -6,8 +6,7 @@ from .models import (
     DivorceDetails,
 )
 # ============================================================
-# REGISTRY ADMIN
-# ============================================================@admin.register(Registry)
+# REGISTRY ADMIN# ============================================================@admin.register(Registry)
 class RegistryAdmin(admin.ModelAdmin):
     list_display = (
         "aut_id",
