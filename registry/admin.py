@@ -8,10 +8,6 @@ from .models import (
 )
 
 
-# ============================================================
-# REGISTRY ADMIN
-# ============================================================
-
 @admin.register(Registry)
 class RegistryAdmin(admin.ModelAdmin):
     list_display = (
@@ -45,10 +41,6 @@ class RegistryAdmin(admin.ModelAdmin):
     )
 
 
-# ============================================================
-# LIFE EVENT ADMIN
-# ============================================================
-
 @admin.register(LifeEvent)
 class LifeEventAdmin(admin.ModelAdmin):
     list_display = (
@@ -71,10 +63,6 @@ class LifeEventAdmin(admin.ModelAdmin):
     )
 
 
-# ============================================================
-# MARRIAGE DETAILS ADMIN
-# ============================================================
-
 @admin.register(MarriageDetails)
 class MarriageDetailsAdmin(admin.ModelAdmin):
     list_display = (
@@ -89,10 +77,6 @@ class MarriageDetailsAdmin(admin.ModelAdmin):
         "spouse_full_name",
     )
 
-
-# ============================================================
-# DIVORCE DETAILS ADMIN
-# ============================================================
 
 @admin.register(DivorceDetails)
 class DivorceDetailsAdmin(admin.ModelAdmin):
