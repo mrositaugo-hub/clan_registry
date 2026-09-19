@@ -4,8 +4,7 @@ from .models import (
     LifeEvent,
     MarriageDetails,
     DivorceDetails,
-)
-# ============================================================
+)# ============================================================
 # REGISTRY ADMIN# ============================================================@admin.register(Registry)
 class RegistryAdmin(admin.ModelAdmin):
     list_display = (
