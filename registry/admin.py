@@ -7,8 +7,7 @@ from .models import (
 )
 # ============================================================
 # REGISTRY ADMIN
-# ============================================================
-@admin.register(Registry)
+# ============================================================@admin.register(Registry)
 class RegistryAdmin(admin.ModelAdmin):
     list_display = (
         "aut_id",
