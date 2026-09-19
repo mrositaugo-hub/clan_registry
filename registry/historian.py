@@ -1114,9 +1114,6 @@ def build_member_profile(member):
         "family_root": (
             member.get_family_root_display()
         ),
-        "family_lineage": display_value(
-            member.family_lineage
-        ),
         "family_name": display_value(
             member.family_name
         ),
@@ -1223,8 +1220,6 @@ def build_full_profile_answer(member):
         f"{profile['place_of_birth']}.\n"
         f"Family root: "
         f"{profile['family_root']}.\n"
-        f"Family lineage: "
-        f"{profile['family_lineage']}.\n"
         f"Family name: "
         f"{profile['family_name']}.\n"
         f"Father: {profile['father']}.\n"
@@ -1598,7 +1593,7 @@ def answer_member_question(
     # AGE
     # --------------------------------------------------------
 
-    if "age" in query:
+    if re.search(r"\bage\b", query):
         age = calculate_age(
             member.date_of_birth
         )
@@ -1709,8 +1704,8 @@ def answer_member_question(
         or "lineage" in query
     ):
         return (
-            f"{name}'s family lineage is "
-            f"{display_value(member.family_lineage)}."
+            f"{name}'s family lineage is not "
+            "recorded in the registry."
         )
 
     if "family name" in query:
@@ -1727,8 +1722,6 @@ def answer_member_question(
             f"{name} belongs to the "
             f"{member.get_family_root_display()} "
             f"family root. "
-            f"Family lineage: "
-            f"{display_value(member.family_lineage)}. "
             f"Family name: "
             f"{display_value(member.family_name)}."
         )
