@@ -1068,7 +1068,7 @@ def get_member_spouse_information(member):
 
     if not spouse_name and divorce:
         spouse_name = clean_text(
-            divorce.spouse_full_name
+            divorce.marriage.spouse_full_name
         )
 
     return {
@@ -1202,7 +1202,150 @@ def build_member_profile(member):
             member.occupation
         ),
     }
+def build_historian_context(member):
+    """
+    Build a complete factual context for a registered member.
 
+    The registry/database is the source of truth.
+    """
+
+    profile = build_member_profile(member)
+
+    # --------------------------------------------------------
+    # LIFE EVENTS
+    # --------------------------------------------------------
+
+    life_events = (
+        LifeEvent.objects
+        .filter(member=member)
+        .select_related(
+            "marriage_details",
+            "divorce_details",
+        )
+        .order_by("event_date")
+    )
+
+    events = []
+
+    for event in life_events:
+
+        item = {
+            "type": event.get_event_type_display(),
+            "date": format_date(
+                event.event_date
+            ),
+            "location": display_value(
+                event.event_location
+            ),
+        }
+
+        if event.event_type == "MARRIAGE":
+
+            try:
+                details = event.marriage_details
+
+                item["spouse"] = display_value(
+                    details.spouse_full_name
+                )
+
+            except MarriageDetails.DoesNotExist:
+                pass
+
+        elif event.event_type == "DIVORCE":
+
+            try:
+                details = event.divorce_details
+
+                item["spouse"] = display_value(
+                    details.marriage.spouse_full_name
+                )
+
+                item["reason"] = display_value(
+                    details.reason
+                )
+
+            except DivorceDetails.DoesNotExist:
+                pass
+
+        events.append(item)
+
+    # --------------------------------------------------------
+    # FAMILY RELATIONSHIPS
+    # --------------------------------------------------------
+
+    related_members = []
+
+    for other in Registry.objects.exclude(
+        pk=member.pk
+    ):
+
+        relationship_type, _ = (
+            relationship_from_registry(
+                member,
+                other,
+            )
+        )
+
+        if relationship_type:
+            related_members.append({
+                "name": member_name(other),
+                "registry_id": other.aut_id,
+                "relationship": relationship_type,
+            })
+
+    # --------------------------------------------------------
+    # FINAL CONTEXT
+    # --------------------------------------------------------
+
+    return {
+        "profile": profile,
+
+        "family": {
+            "root": profile["family_root"],
+            "family_name": profile["family_name"],
+            "father": profile["father"],
+            "mother": profile["mother"],
+            "mother_clan": profile["mother_clan"],
+            "mother_village": profile["mother_village"],
+            "mother_state": profile["mother_state"],
+            "mother_country": profile["mother_country"],
+        },
+
+        "marriage": {
+            "spouse": profile["spouse"],
+            "date_of_marriage": (
+                profile["date_of_marriage"]
+            ),
+            "spouse_clan": profile["spouse_clan"],
+            "spouse_village": profile["spouse_village"],
+            "spouse_state": profile["spouse_state"],
+            "spouse_country": profile["spouse_country"],
+            "date_of_divorce": (
+                profile["date_of_divorce"]
+            ),
+        },
+
+        "life_events": events,
+
+        "relationships": related_members,
+
+        "education": {
+            "academic_qualification": (
+                profile[
+                    "academic_qualification"
+                ]
+            ),
+        },
+
+        "profession": {
+            "area": profile[
+                "area_of_profession"
+            ],
+            "occupation": profile[
+                "occupation"
+            ],
+        },
+    }
 
 def build_full_profile_answer(member):
     profile = build_member_profile(
@@ -1260,62 +1403,196 @@ def build_full_profile_answer(member):
 # LIFE EVENTS
 # ============================================================
 
-def answer_member_life_events(member):
+def answer_life_event_question(question):
+    query = normalize(question)
+
+    # --------------------------------------------------------
+    # DETERMINE EVENT TYPE
+    # --------------------------------------------------------
+
+    if (
+        "divorce" in query
+        or "divorced" in query
+    ):
+        event_type = "DIVORCE"
+        event_label = "divorce"
+
+    elif (
+        "marriage" in query
+        or "married" in query
+        or "marry" in query
+    ):
+        event_type = "MARRIAGE"
+        event_label = "marriage"
+
+    elif (
+        "death" in query
+        or "deaths" in query
+        or "died" in query
+    ):
+        event_type = "DEATH"
+        event_label = "death"
+
+    else:
+        event_type = None
+        event_label = None
+
+    if not event_type:
+        return None
+
+    # --------------------------------------------------------
+    # GET EVENTS
+    # --------------------------------------------------------
+
     events = (
         LifeEvent.objects
-        .filter(member=member)
+        .filter(event_type=event_type)
         .select_related(
+            "member",
             "marriage_details",
-            "divorce_details",
+            "divorce_details__marriage",
         )
         .order_by("event_date")
     )
 
-    if not events.exists():
+    count = events.count()
+
+    # --------------------------------------------------------
+    # COUNT QUESTIONS
+    # --------------------------------------------------------
+
+    is_count_question = any(
+        phrase in query
+        for phrase in (
+            "how many",
+            "number of",
+            "count",
+            "total",
+        )
+    )
+
+    if is_count_question:
         return (
-            f"No Life Events are currently recorded "
-            f"for {member_name(member)}."
+            f"There are {count} recorded "
+            f"{event_label} Life Event"
+            f"{'s' if count != 1 else ''}."
         )
 
-    lines = [
-        f"Life Events recorded for "
-        f"{member_name(member)}:"
-    ]
+    # --------------------------------------------------------
+    # WHO / WHICH MEMBER QUESTIONS
+    # --------------------------------------------------------
 
-    for event in events:
-        line = (
-            f"• {event.get_event_type_display()} — "
-            f"{format_date(event.event_date)}"
-        )
+    is_who_question = (
+        query.startswith("who")
+        or "who got" in query
+        or "who was" in query
+        or "who were" in query
+        or "which member" in query
+        or "which members" in query
+        or "recorded under who" in query
+        or "recorded for who" in query
+        or "recorded for whom" in query
+        or "has divorce records" in query
+        or "have divorce records" in query
+    )
 
-        if event.event_location:
-            line += (
-                f" — {event.event_location}"
+    if is_who_question:
+
+        if not events.exists():
+            return (
+                f"There are no recorded "
+                f"{event_label} Life Events."
             )
 
-        if event.event_type == "MARRIAGE":
-            try:
-                details = event.marriage_details
+        lines = [
+            f"There are {count} recorded "
+            f"{event_label} Life Event"
+            f"{'s' if count != 1 else ''}:"
+        ]
+
+        for index, event in enumerate(
+            events,
+            start=1,
+        ):
+            member = event.member
+
+            line = (
+                f"{index}. {member_name(member)} "
+                f"({member.aut_id})"
+            )
+
+            line += (
+                f" — {event_label}: "
+                f"{format_date(event.event_date)}"
+            )
+
+            if event.event_location:
                 line += (
-                    f" — Spouse: "
-                    f"{details.spouse_full_name}"
+                    f" — Location: "
+                    f"{event.event_location}"
                 )
-            except MarriageDetails.DoesNotExist:
-                pass
 
-        elif event.event_type == "DIVORCE":
-            try:
-                details = event.divorce_details
-                line += (
-                    f" — Spouse: "
-                    f"{details.spouse_full_name}"
-                )
-            except DivorceDetails.DoesNotExist:
-                pass
+            # ------------------------------------------------
+            # MARRIAGE INFORMATION
+            # ------------------------------------------------
 
-        lines.append(line)
+            if event_type == "MARRIAGE":
 
-    return "\n".join(lines)
+                try:
+                    details = (
+                        event.marriage_details
+                    )
+
+                    if details.spouse_full_name:
+                        line += (
+                            f" — Spouse: "
+                            f"{details.spouse_full_name}"
+                        )
+
+                except MarriageDetails.DoesNotExist:
+                    pass
+
+            # ------------------------------------------------
+            # DIVORCE INFORMATION
+            # ------------------------------------------------
+
+            elif event_type == "DIVORCE":
+
+                try:
+                    details = (
+                        event.divorce_details
+                    )
+
+                    if details.marriage:
+                        spouse_name = (
+                            details.marriage
+                            .spouse_full_name
+                        )
+
+                        if spouse_name:
+                            line += (
+                                f" — Spouse: "
+                                f"{spouse_name}"
+                            )
+
+                    if details.reason:
+                        line += (
+                            f" — Reason: "
+                            f"{details.reason}"
+                        )
+
+                except DivorceDetails.DoesNotExist:
+                    pass
+
+            lines.append(line)
+
+        return "\n".join(lines)
+
+    # --------------------------------------------------------
+    # GENERAL LIFE-EVENT QUESTION
+    # --------------------------------------------------------
+
+    return None
 
 
 def answer_life_event_question(question):
@@ -3186,6 +3463,7 @@ def process_historian_question(
         return answer, []
 
     # --------------------------------------------------------
+        # --------------------------------------------------------
     # 4. GLOBAL STATISTICS
     # --------------------------------------------------------
 
@@ -3200,7 +3478,29 @@ def process_historian_question(
         return answer, []
 
     # --------------------------------------------------------
-    # 5. RELATIONSHIP QUESTIONS
+    # 5. GLOBAL LIFE-EVENT QUESTIONS
+    #
+    # Handles questions such as:
+    #   "how many divorces do we have?"
+    #   "who are the divorces recorded under?"
+    #   "who got married?"
+    #   "who died?"
+    # --------------------------------------------------------
+
+    answer = answer_life_event_question(
+        raw_question
+    )
+
+    if answer:
+        save_historian_state(
+            request,
+            intent="life_event",
+        )
+
+        return answer, []
+
+    # --------------------------------------------------------
+    # 6. RELATIONSHIP QUESTIONS
     # --------------------------------------------------------
 
     relationship_answer, relationship_results = (
