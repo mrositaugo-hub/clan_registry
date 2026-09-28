@@ -113,17 +113,23 @@ class Registry(models.Model):
 
     family_name = models.CharField(
         max_length=200,
-        blank=True,
     )
 
     immediate_fathers_name = models.CharField(
         max_length=200,
-        blank=True,
+        blank=True
+    )
+
+    immediate_father = models.ForeignKey(
+    "self",
+       on_delete=models.SET_NULL,
+       null=True,
+       blank=True,
+       related_name="children",
     )
 
     mother_name = models.CharField(
-        max_length=200,
-        blank=True,
+        max_length=200
     )
 
     mother_clan = models.CharField(
@@ -379,7 +385,7 @@ class LifeEvent(models.Model):
         # EVENT DATE REQUIRED
         # ----------------------------------------------------
 
-        if not self.event_date:
+        if not self.event_date and self.event_type != "DIVORCE":
 
             errors["event_date"] = (
                 "An event date is required."
@@ -993,6 +999,9 @@ class DivorceDetails(models.Model):
     # ========================================================
 
     date_of_divorce = models.DateField()
+    reason = models.TextField(
+    blank=True,
+)
 
     # ========================================================
     # VALIDATION
@@ -1010,10 +1019,10 @@ class DivorceDetails(models.Model):
 
             if self.life_event.event_type != "DIVORCE":
 
-                errors["life_event"] = (
-                    "Divorce details must be connected "
-                    "to a Divorce life event."
-                )
+                errors["__all__"] = (
+                  "Divorce details must be connected "
+                  "to a Divorce life event."
+            )
 
         # ----------------------------------------------------
         # MARRIAGE RELATIONSHIP
@@ -1034,9 +1043,9 @@ class DivorceDetails(models.Model):
                     != marriage.member_id
                 ):
 
-                    errors["life_event"] = (
-                        "The divorce and marriage must belong "
-                        "to the same registry member."
+                    errors["__all__"] = (
+                       "The divorce and marriage must belong "
+                       "to the same registry member."
                     )
 
             # ------------------------------------------------
@@ -1130,20 +1139,9 @@ class DivorceDetails(models.Model):
 
         if not self.marriage_id:
 
-            errors["marriage"] = (
+            errors["__all__"] = (
                 "A divorce must be connected "
                 "to a specific marriage."
-            )
-
-        # ----------------------------------------------------
-        # LIFE EVENT REQUIRED
-        # ----------------------------------------------------
-
-        if not self.life_event_id:
-
-            errors["life_event"] = (
-                "A divorce must be connected "
-                "to a Divorce life event."
             )
 
         # ----------------------------------------------------
@@ -1187,3 +1185,79 @@ class DivorceDetails(models.Model):
         verbose_name = "Divorce Detail"
 
         verbose_name_plural = "Divorce Details"
+
+# ============================================================
+# NAME CHANGE DETAILS
+# ============================================================
+
+class NameChangeDetails(models.Model):
+
+    life_event = models.OneToOneField(
+        LifeEvent,
+        on_delete=models.CASCADE,
+        related_name="name_change_details",
+    )
+
+    previous_name = models.CharField(
+        max_length=200,
+    )
+
+    current_name = models.CharField(
+        max_length=200,
+    )
+
+    def clean(self):
+
+        errors = {}
+
+        if self.life_event_id:
+
+            if self.life_event.event_type != "NAME_CHANGE":
+
+                errors["life_event"] = (
+                    "Name change details must be connected "
+                    "to a Name Change life event."
+                )
+
+            if (
+                self.life_event.member_id
+                and self.previous_name
+            ):
+
+                member = self.life_event.member
+
+                actual_name = " ".join(
+                    filter(
+                        None,
+                        [
+                            member.firstname,
+                            member.middlename,
+                            member.surname,
+                        ],
+                    )
+                ).strip()
+
+                if actual_name and (
+                    self.previous_name.strip()
+                    != actual_name
+                ):
+
+                    errors["previous_name"] = (
+                        "Previous name must match "
+                        "the member's current registered name."
+                    )
+
+        if (
+            self.previous_name
+            and self.current_name
+            and self.previous_name.strip().lower()
+            == self.current_name.strip().lower()
+        ):
+
+            errors["current_name"] = (
+                "Current name must be different "
+                "from the previous name."
+            )
+
+        if errors:
+            raise ValidationError(errors)

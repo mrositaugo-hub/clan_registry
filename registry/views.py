@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.contrib import messages
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
@@ -9,6 +10,7 @@ from .forms import (
     DivorceDetailsForm,
     MarriageDetailsFormSet,
     InitialDivorceFormSet,
+    NameChangeDetailsForm,
 )
 
 from .models import (
@@ -126,6 +128,16 @@ def dashboard(request):
 def new_registry(request):
 
     if request.method == "POST":
+
+        print(
+            "POST immediate_father:",
+            request.POST.get("immediate_father")
+        )
+
+        print(
+            "POST manual_immediate_father:",
+            request.POST.get("manual_immediate_father")
+        )
 
         # ----------------------------------------------------
         # MAIN REGISTRY FORM
@@ -548,6 +560,10 @@ def new_life_event(request):
             )
 
     selected_member = None
+    life_event_form = None
+    marriage_form = None
+    divorce_form = None
+    name_change_form = None
     details_form = None
     selected_event_type = ""
 
@@ -555,16 +571,10 @@ def new_life_event(request):
     # GET PARAMETERS
     # --------------------------------------------------------
 
-    member_id = request.GET.get(
-        "member",
-        "",
-    )
+    member_id = request.GET.get("member", "")
 
     event_type = (
-        request.GET.get(
-            "event_type",
-            "",
-        )
+        request.GET.get("event_type", "")
         .upper()
     )
 
@@ -582,21 +592,15 @@ def new_life_event(request):
 
     if request.method == "POST":
 
-        member_id = request.POST.get(
-            "member",
-            "",
-        )
+        member_id = request.POST.get("member", "")
 
         selected_event_type = (
-            request.POST.get(
-                "event_type",
-                "",
-            )
+            request.POST.get("event_type", "")
             .upper()
         )
 
         # ----------------------------------------------------
-        # Get selected registry member
+        # Get selected member
         # ----------------------------------------------------
 
         if member_id:
@@ -606,21 +610,33 @@ def new_life_event(request):
             )
 
         # ----------------------------------------------------
-        # Main LifeEvent form
+        # MAIN LIFE EVENT FORM
+        #
+        # Marriage and Divorce have their own date fields.
+        # Copy that date into event_date before Django builds
+        # the LifeEvent form.
         # ----------------------------------------------------
+
+        life_event_post = request.POST.copy()
+
+        if selected_event_type == "MARRIAGE":
+            life_event_post["event_date"] = (
+                request.POST.get("date_of_marriage", "")
+            )
+
+        elif selected_event_type == "DIVORCE":
+            life_event_post["event_date"] = (
+                request.POST.get("date_of_divorce", "")
+            )
 
         life_event_form = LifeEventForm(
-            request.POST
+            life_event_post
         )
 
-        # ----------------------------------------------------
-        # IMPORTANT:
-        #
-        # Attach required model values BEFORE validation.
-        # ----------------------------------------------------
-
         if selected_member:
-            life_event_form.instance.member = selected_member
+            life_event_form.instance.member = (
+                selected_member
+            )
 
         if selected_event_type:
             life_event_form.instance.event_type = (
@@ -628,31 +644,39 @@ def new_life_event(request):
             )
 
         # ----------------------------------------------------
-        # Event-specific forms
+        # EVENT-SPECIFIC FORM
         # ----------------------------------------------------
 
         if selected_event_type == "MARRIAGE":
 
-            details_form = MarriageDetailsForm(
+            marriage_form = MarriageDetailsForm(
                 request.POST,
                 member=selected_member,
             )
+
+            details_form = marriage_form
 
         elif selected_event_type == "DIVORCE":
 
-            details_form = DivorceDetailsForm(
+            divorce_form = DivorceDetailsForm(
                 request.POST,
                 member=selected_member,
             )
 
-        else:
-            details_form = None
+            details_form = divorce_form
 
-        # ----------------------------------------------------
-        # Validate forms
-        # ----------------------------------------------------
+        elif selected_event_type == "NAME_CHANGE":
 
-        life_event_valid = life_event_form.is_valid()
+            name_change_form = NameChangeDetailsForm(
+                request.POST,
+                member=selected_member,
+            )
+
+            details_form = name_change_form    
+
+        # ====================================================
+        # VALIDATION
+        # ====================================================
 
         details_valid = True
 
@@ -660,8 +684,44 @@ def new_life_event(request):
             details_valid = details_form.is_valid()
 
         # ----------------------------------------------------
-        # Save everything only when valid
+        # Marriage date becomes LifeEvent date
         # ----------------------------------------------------
+
+        if (
+            selected_event_type == "MARRIAGE"
+            and details_valid
+        ):
+            life_event_form.instance.event_date = (
+                marriage_form.cleaned_data.get(
+                    "date_of_marriage"
+                )
+            )
+
+        # ----------------------------------------------------
+        # Divorce date becomes LifeEvent date
+        # ----------------------------------------------------
+
+        elif (
+            selected_event_type == "DIVORCE"
+            and details_valid
+        ):
+            life_event_form.instance.event_date = (
+                divorce_form.cleaned_data.get(
+                    "date_of_divorce"
+                )
+            )
+
+        # ----------------------------------------------------
+        # Validate LifeEvent AFTER its date is available.
+        # ----------------------------------------------------
+
+        life_event_valid = (
+            life_event_form.is_valid()
+        )
+
+        # ====================================================
+        # SAVE ONLY IF EVERYTHING IS VALID
+        # ====================================================
 
         if (
             selected_member
@@ -669,95 +729,122 @@ def new_life_event(request):
             and details_valid
         ):
 
-            life_event = life_event_form.save(
-                commit=False
-            )
-
-            life_event.member = selected_member
-            life_event.event_type = selected_event_type
-
             # ------------------------------------------------
-            # Marriage date becomes official event date
+            # ATOMIC TRANSACTION
+            #
+            # If anything fails during saving, Django rolls
+            # everything back.
             # ------------------------------------------------
 
-            if selected_event_type == "MARRIAGE":
+            with transaction.atomic():
 
-                marriage_date = (
-                    details_form.cleaned_data.get(
-                        "date_of_marriage"
-                    )
-                )
+                # --------------------------------------------
+                # SAVE LIFE EVENT
+                # --------------------------------------------
 
-                if marriage_date:
-                    life_event.event_date = (
-                        marriage_date
-                    )
-
-            # ------------------------------------------------
-            # Divorce date becomes official event date
-            # ------------------------------------------------
-
-            elif selected_event_type == "DIVORCE":
-
-                divorce_date = (
-                    details_form.cleaned_data.get(
-                        "date_of_divorce"
-                    )
-                )
-
-                if divorce_date:
-                    life_event.event_date = (
-                        divorce_date
-                    )
-
-            # ------------------------------------------------
-            # Save main life event
-            # ------------------------------------------------
-
-            life_event.save()
-
-            # ------------------------------------------------
-            # Save marriage details
-            # ------------------------------------------------
-
-            if selected_event_type == "MARRIAGE":
-
-                details = details_form.save(
+                life_event = life_event_form.save(
                     commit=False
                 )
 
-                details.member = selected_member
-                details.life_event = life_event
-
-                details.save()
-
-            # ------------------------------------------------
-            # Save divorce details
-            # ------------------------------------------------
-
-            elif selected_event_type == "DIVORCE":
-
-                details = details_form.save(
-                    commit=False
+                life_event.member = selected_member
+                life_event.event_type = (
+                    selected_event_type
                 )
 
-                details.life_event = life_event
+                # --------------------------------------------
+                # Marriage date
+                # --------------------------------------------
 
-                details.save()
+                if selected_event_type == "MARRIAGE":
 
-            # ------------------------------------------------
-            # Success message
-            # ------------------------------------------------
+                    life_event.event_date = (
+                        marriage_form.cleaned_data.get(
+                            "date_of_marriage"
+                        )
+                    )
 
-            messages.success(
-                request,
-                (
-                    f"{life_event.get_event_type_display()} "
-                    f"recorded successfully for "
-                    f"{selected_member.surname} "
-                    f"{selected_member.firstname}."
-                ),
-            )
+                # --------------------------------------------
+                # Divorce date
+                # --------------------------------------------
+
+                elif selected_event_type == "DIVORCE":
+
+                    life_event.event_date = (
+                        divorce_form.cleaned_data.get(
+                            "date_of_divorce"
+                        )
+                    )
+
+                life_event.save()
+
+                # --------------------------------------------
+                # SAVE MARRIAGE DETAILS
+                # --------------------------------------------
+
+                if selected_event_type == "MARRIAGE":
+
+                    marriage = marriage_form.save(
+                        commit=False
+                    )
+
+                    marriage.member = selected_member
+                    marriage.life_event = life_event
+
+                    marriage.save()
+
+                # --------------------------------------------
+                # SAVE DIVORCE DETAILS
+                # --------------------------------------------
+
+                elif selected_event_type == "DIVORCE":
+
+                    divorce = divorce_form.save(
+                        commit=False
+                    )
+
+                    divorce.life_event = life_event
+
+                    divorce.save()
+
+                # --------------------------------------------
+                # SAVE NAME CHANGE DETAILS
+                # --------------------------------------------
+
+                elif selected_event_type == "NAME_CHANGE":
+
+                    name_change = name_change_form.save(
+                        commit=False
+                    )
+
+                    name_change.life_event = life_event
+
+                    name_change.previous_name = (
+                        name_change_form.cleaned_data.get(
+                            "previous_name"
+                        )
+                    )
+
+                    name_change.current_name = (
+                        name_change_form.cleaned_data.get(
+                            "current_name"
+                        )
+                    )
+
+                    name_change.save()
+
+                # --------------------------------------------
+                # SUCCESS
+                # --------------------------------------------
+
+                messages.success(
+                    request,
+                    (
+                        f"{life_event.get_event_type_display()} "
+                        f"recorded successfully for "
+                        f"{selected_member.surname} "
+                        f"{selected_member.firstname}."
+                    ),
+                )
 
             return redirect(
                 "view_life_event",
@@ -772,21 +859,34 @@ def new_life_event(request):
 
         life_event_form = LifeEventForm()
 
+        if selected_member:
+
+            marriage_form = MarriageDetailsForm(
+                member=selected_member,
+            )
+
+            divorce_form = DivorceDetailsForm(
+                member=selected_member,
+            )
+
+            name_change_form = NameChangeDetailsForm(
+                 member=selected_member,
+            )
+
         if event_type == "MARRIAGE":
 
             selected_event_type = "MARRIAGE"
-
-            details_form = MarriageDetailsForm(
-                member=selected_member,
-            )
+            details_form = marriage_form
 
         elif event_type == "DIVORCE":
 
             selected_event_type = "DIVORCE"
+            details_form = divorce_form
 
-            details_form = DivorceDetailsForm(
-                member=selected_member,
-            )
+        elif event_type == "NAME_CHANGE":
+
+            selected_event_type = "NAME_CHANGE"
+            details_form = name_change_form
 
     # ========================================================
     # CONTEXT
@@ -798,6 +898,9 @@ def new_life_event(request):
         "selected_event_type": selected_event_type,
         "life_event_form": life_event_form,
         "details_form": details_form,
+        "marriage_form": marriage_form,
+        "divorce_form": divorce_form,
+        "name_change_form": name_change_form,
         "query": search_query,
         "search_query": search_query,
     }

@@ -169,23 +169,27 @@ Life Event Details
             </div>
 
 
-            <div class="form-group">
+            {% if life_event.event_type != "DIVORCE" %}
 
-                <label>
-                    Event Location
-                </label>
+    <div class="form-group">
 
-                <div class="readonly-value">
+        <label>
+            Event Location
+        </label>
 
-                    {% if life_event.event_location %}
-                        {{ life_event.event_location }}
-                    {% else %}
-                        Not provided
-                    {% endif %}
+        <div class="readonly-value">
 
-                </div>
+            {% if life_event.event_location %}
+                {{ life_event.event_location }}
+            {% else %}
+                Not provided
+            {% endif %}
 
-            </div>
+        </div>
+
+    </div>
+
+{% endif %}
 
         </div>
 
@@ -401,8 +405,8 @@ Life Event Details
 
                         <div class="readonly-value">
 
-                            {% if life_event.divorce_details.spouse_full_name %}
-                                {{ life_event.divorce_details.spouse_full_name }}
+                            {% if life_event.divorce_details.marriage.spouse_full_name %}
+                                {{ life_event.divorce_details.marriage.spouse_full_name }}
                             {% else %}
                                 Not provided
                             {% endif %}

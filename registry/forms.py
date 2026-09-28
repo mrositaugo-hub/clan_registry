@@ -6,6 +6,7 @@ from .models import (
     LifeEvent,
     MarriageDetails,
     DivorceDetails,
+    NameChangeDetails,
 )
 
 
@@ -14,7 +15,28 @@ from .models import (
 # ============================================================
 
 class RegistryForm(forms.ModelForm):
+    immediate_father = forms.ModelChoiceField(
+        queryset=Registry.objects.none(),
+        required=False,
+        label="Immediate Father's Name",
+        empty_label="Select a registered father",
+        widget=forms.Select(
+            attrs={
+                "class": "form-control",
+            }
+        ),
+    )
 
+    manual_immediate_father = forms.CharField(
+        required=False,
+        label="Or enter father's name manually",
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "Enter father's name if not registered",
+            }
+        ),
+    )
     class Meta:
         model = Registry
 
@@ -31,7 +53,6 @@ class RegistryForm(forms.ModelForm):
             "place_of_birth",
 
             "family_name",
-            "immediate_fathers_name",
             "mother_name",
             "mother_clan",
             "mother_village",
@@ -70,6 +91,84 @@ class RegistryForm(forms.ModelForm):
                 }
             ),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        queryset = Registry.objects.all().order_by(
+            "firstname",
+            "middlename",
+            "surname",
+        )
+
+        if self.instance and self.instance.pk:
+            queryset = queryset.exclude(pk=self.instance.pk)
+
+        self.fields["immediate_father"].queryset = queryset
+
+        if self.instance and self.instance.immediate_father_id:
+            self.fields["immediate_father"].initial = (
+                self.instance.immediate_father_id
+            )
+
+        if self.instance and self.instance.immediate_fathers_name:
+            if not self.instance.immediate_father_id:
+                self.fields["manual_immediate_father"].initial = (
+                    self.instance.immediate_fathers_name
+                )
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        father = cleaned_data.get("immediate_father")
+        manual_father = (
+            cleaned_data.get("manual_immediate_father") or ""
+        ).strip()
+
+        if father and manual_father:
+            self.add_error(
+                "manual_immediate_father",
+                "Select a registered father or enter the father's name manually, not both.",
+            )
+
+        if father:
+            father_name = " ".join(
+                filter(
+                    None,
+                    [
+                        father.firstname,
+                        father.middlename,
+                        father.surname,
+                    ],
+                )
+            ).strip()
+
+            cleaned_data["resolved_father_name"] = father_name
+
+        elif manual_father:
+            cleaned_data["resolved_father_name"] = manual_father
+
+        else:
+            cleaned_data["resolved_father_name"] = ""
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        father = self.cleaned_data.get("immediate_father")
+        resolved_name = self.cleaned_data.get(
+            "resolved_father_name",
+            "",
+        )
+
+        instance.immediate_father = father
+        instance.immediate_fathers_name = resolved_name
+
+        if commit:
+            instance.save()
+
+        return instance
 
     def clean_phone_number(self):
         phone = self.cleaned_data.get("phone_number", "").strip()
@@ -114,6 +213,16 @@ class RegistryForm(forms.ModelForm):
 
 class LifeEventForm(forms.ModelForm):
 
+    event_date = forms.DateField(
+        required=False,
+        widget=forms.DateInput(
+            attrs={
+                "type": "date",
+                "class": "form-control",
+            }
+        ),
+    )
+
     class Meta:
         model = LifeEvent
 
@@ -123,13 +232,6 @@ class LifeEventForm(forms.ModelForm):
         ]
 
         widgets = {
-            "event_date": forms.DateInput(
-                attrs={
-                    "type": "date",
-                    "class": "form-control",
-                }
-            ),
-
             "event_location": forms.TextInput(
                 attrs={
                     "class": "form-control",
@@ -137,7 +239,6 @@ class LifeEventForm(forms.ModelForm):
                 }
             ),
         }
-
 
 # ============================================================
 # MARRIAGE DETAILS FORM
@@ -332,7 +433,19 @@ class DivorceDetailsForm(forms.ModelForm):
             attrs={
                 "class": "form-control",
                 "readonly": "readonly",
-                "placeholder": "Spouse name will appear automatically",
+            }
+        ),
+    )
+
+    marriage_date = forms.DateField(
+        label="Marriage Date",
+        required=False,
+        disabled=True,
+        widget=forms.DateInput(
+            attrs={
+                "type": "date",
+                "class": "form-control",
+                "readonly": "readonly",
             }
         ),
     )
@@ -343,14 +456,11 @@ class DivorceDetailsForm(forms.ModelForm):
         fields = [
             "marriage",
             "date_of_divorce",
+            "reason",
         ]
 
         widgets = {
-            "marriage": forms.Select(
-                attrs={
-                    "class": "form-control",
-                }
-            ),
+            "marriage": forms.HiddenInput(),
 
             "date_of_divorce": forms.DateInput(
                 attrs={
@@ -358,104 +468,98 @@ class DivorceDetailsForm(forms.ModelForm):
                     "class": "form-control",
                 }
             ),
+
+            "reason": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 3,
+                    "placeholder": "Reason for divorce (optional)",
+                }
+            ),
         }
 
     def __init__(self, *args, member=None, **kwargs):
+
         super().__init__(*args, **kwargs)
 
         self.member = member
 
         if member is not None:
+
             queryset = (
                 MarriageDetails.objects
                 .filter(
                     member=member,
                     divorce__isnull=True,
                 )
-                .select_related("member")
-                .order_by("date_of_marriage", "id")
+                .order_by(
+                    "date_of_marriage",
+                    "id",
+                )
             )
 
             self.fields["marriage"].queryset = queryset
 
-            # ------------------------------------------------
-            # Automatically select the marriage when there is
-            # exactly one eligible marriage.
-            # ------------------------------------------------
-            if queryset.count() == 1:
-                marriage = queryset.first()
+            # Automatically select the latest undivorced marriage.
+            marriage = queryset.order_by(
+                "-date_of_marriage",
+                "-id",
+            ).first()
 
-                if marriage:
-                    self.initial["marriage"] = marriage.pk
-                    self.initial["spouse_full_name"] = (
-                        marriage.spouse_full_name
-                    )
+            if marriage:
 
-            # ------------------------------------------------
-            # Add spouse information to each dropdown option.
-            # JavaScript uses this to update the read-only
-            # spouse name field when the user changes marriage.
-            # ------------------------------------------------
-            for option in self.fields["marriage"].choices:
-                pass
+                self.initial["marriage"] = marriage.pk
 
-            self.fields["marriage"].label_from_instance = (
-                self.marriage_label
-            )
+                self.fields["spouse_full_name"].initial = (
+                    marriage.spouse_full_name
+                )
+
+                self.fields["marriage_date"].initial = (
+                    marriage.date_of_marriage
+                )
 
         else:
+
             self.fields["marriage"].queryset = (
                 MarriageDetails.objects.none()
             )
 
-            self.fields["marriage"].label_from_instance = (
-                self.marriage_label
-            )
-
-    @staticmethod
-    def marriage_label(marriage):
-        return (
-            f"{marriage.spouse_full_name} "
-            f"(married {marriage.date_of_marriage:%d %b %Y})"
-        )
-
     def clean(self):
+
         cleaned_data = super().clean()
 
         marriage = cleaned_data.get("marriage")
         divorce_date = cleaned_data.get("date_of_divorce")
 
-        # ----------------------------------------------------
-        # Never trust the displayed spouse name.
-        # The selected MarriageDetails record is the
-        # authoritative source.
-        # ----------------------------------------------------
         if marriage:
+
             self.cleaned_spouse_full_name = (
                 marriage.spouse_full_name
             )
 
-        if marriage and divorce_date:
+            if divorce_date:
 
-            if divorce_date < marriage.date_of_marriage:
-                self.add_error(
-                    "date_of_divorce",
-                    "Divorce date cannot be earlier than "
-                    "the marriage date.",
-                )
+                if divorce_date < marriage.date_of_marriage:
+                    self.add_error(
+                        "date_of_divorce",
+                        "Divorce date cannot be earlier "
+                        "than the marriage date.",
+                    )
 
-            if (
-                marriage.member.date_of_birth
-                and divorce_date < marriage.member.date_of_birth
-            ):
-                self.add_error(
-                    "date_of_divorce",
-                    "Divorce date cannot be earlier than "
-                    "the member's date of birth.",
-                )
+                if (
+                    marriage.member.date_of_birth
+                    and divorce_date
+                    < marriage.member.date_of_birth
+                ):
+                    self.add_error(
+                        "date_of_divorce",
+                        "Divorce date cannot be earlier "
+                        "than the member's date of birth.",
+                    )
 
         return cleaned_data
-
+           
+    
 
 # ============================================================
 # INITIAL REGISTRATION DIVORCE FORM
@@ -577,3 +681,88 @@ InitialDivorceFormSet = formset_factory(
     extra=0,
     can_delete=True,
 )
+
+# ============================================================
+# NAME CHANGE DETAILS FORM
+# ============================================================
+
+class NameChangeDetailsForm(forms.ModelForm):
+
+    previous_name = forms.CharField(
+        label="Previous Name",
+        required=False,
+        disabled=True,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "readonly": "readonly",
+            }
+        ),
+    )
+
+    class Meta:
+        model = NameChangeDetails
+
+        fields = [
+            "previous_name",
+            "current_name",
+        ]
+
+        widgets = {
+            "current_name": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Enter current name",
+                }
+            ),
+        }
+
+    def __init__(self, *args, member=None, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        self.member = member
+
+        if member is not None:
+
+            actual_name = " ".join(
+                filter(
+                    None,
+                    [
+                        member.firstname,
+                        member.middlename,
+                        member.surname,
+                    ],
+                )
+            ).strip()
+
+            self.fields["previous_name"].initial = (
+                actual_name
+            )
+
+    def clean(self):
+
+        cleaned_data = super().clean()
+
+        previous_name = (
+            cleaned_data.get("previous_name") or ""
+        ).strip()
+
+        current_name = (
+            cleaned_data.get("current_name") or ""
+        ).strip()
+
+        if (
+            previous_name
+            and current_name
+            and previous_name.lower()
+            == current_name.lower()
+        ):
+
+            self.add_error(
+                "current_name",
+                "Current name must be different "
+                "from the previous name.",
+            )
+
+        return cleaned_data

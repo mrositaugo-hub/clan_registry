@@ -332,19 +332,53 @@ NEW REGISTRY
 
                 </div>
 
+<!-- IMMEDIATE FATHER -->
+<div class="form-field">
 
-                <!-- IMMEDIATE FATHER -->
+    <div
+        style="
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.5fr 1.5fr;
+            gap: 10px;
+            align-items: center;
+        "
+    >
 
-                <div class="form-field">
+        <!-- LABEL -->
+        <label
+            for="{{ form.immediate_father.id_for_label }}"
+            style="
+                margin: 0;
+                white-space: nowrap;
+            "
+        >
+            Immediate Father's Name
+        </label>
 
-                    <label for="{{ form.immediate_fathers_name.id_for_label }}">
-                        Immediate Father's Name
-                    </label>
+        <!-- SEARCH -->
+        <input
+            type="text"
+            id="fatherSearch"
+            class="form-control"
+            placeholder="Search name or ID..."
+            autocomplete="off"
+        >
 
-                    {{ form.immediate_fathers_name }}
-                    {{ form.immediate_fathers_name.errors }}
+        <!-- REGISTERED FATHER -->
+        <div>
+            {{ form.immediate_father }}
+            {{ form.immediate_father.errors }}
+        </div>
 
-                </div>
+        <!-- MANUAL FATHER -->
+        <div>
+            {{ form.manual_immediate_father }}
+            {{ form.manual_immediate_father.errors }}
+        </div>
+
+    </div>
+
+</div>
 
 
                 <!-- MOTHER NAME -->
@@ -2035,6 +2069,69 @@ document.addEventListener(
 
     }
 );
+
+    /*
+     * Immediate Father Search
+     */
+
+    const fatherSearch =
+        document.getElementById("fatherSearch");
+
+    const fatherSelect =
+        document.getElementById("id_immediate_father");
+
+    if (fatherSearch && fatherSelect) {
+
+        const originalOptions =
+            Array.from(fatherSelect.options);
+
+        fatherSearch.addEventListener(
+            "input",
+            function () {
+
+                const search =
+                    this.value
+                        .toLowerCase()
+                        .trim();
+
+                const currentValue =
+                    fatherSelect.value;
+
+                fatherSelect.innerHTML = "";
+
+                originalOptions.forEach(
+                    function (option) {
+
+                        const text =
+                            option.text
+                                .toLowerCase();
+
+                        const value =
+                            option.value
+                                .toLowerCase();
+
+                        if (
+                            option.value === "" ||
+                            text.includes(search) ||
+                            value.includes(search)
+                        ) {
+
+                            fatherSelect.appendChild(
+                                option.cloneNode(true)
+                            );
+
+                        }
+
+                    }
+                );
+
+                fatherSelect.value =
+                    currentValue;
+
+            }
+        );
+
+    }
 
 </script>
 

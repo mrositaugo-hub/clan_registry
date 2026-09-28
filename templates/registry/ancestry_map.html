@@ -798,6 +798,9 @@ const ancestryMembers = [
     {% for member in members %}
 
     {
+        dbId: 
+            "{{ member.pk|default:''|escapejs }}",
+
         id:
             "{{ member.aut_id|default:''|escapejs }}",
 
@@ -821,6 +824,9 @@ const ancestryMembers = [
 
         familyName:
             "{{ member.family_name|default:''|escapejs }}",
+        
+        immediateFatherId:
+            "{{ member.immediate_father_id|default:''|escapejs }}",
 
         father:
             "{{ member.immediate_fathers_name|default:''|escapejs }}",
@@ -938,7 +944,11 @@ const FAMILY_X = 660;
 const FAMILY_WIDTH = 210;
 const FAMILY_HEIGHT = 54;
 
-const MEMBER_X = 930;
+const FATHER_X = 930;
+const FATHER_WIDTH = 190;
+const FATHER_HEIGHT = 70;
+
+const MEMBER_X = 1200;
 const MEMBER_WIDTH = 190;
 const MEMBER_HEIGHT = 70;
 
@@ -1589,79 +1599,146 @@ function getFilteredMembers() {
    BUILD FAMILY STRUCTURE (CASE INSENSITIVE KEY MATCHING)
 ============================================================ */
 
-function buildTreeStructure(
-    filteredMembers
-) {
+function buildTreeStructure(filteredMembers) {
 
     const roots = {};
 
+    officialRootFamilies.forEach(root => {
 
-    officialRootFamilies.forEach(
-        root => {
+        const normalizedCode =
+            (root.code || "").toUpperCase();
 
-            const normalizedCode =
-                (root.code || "").toUpperCase();
+        roots[normalizedCode] = {
+            code: root.code,
+            name: root.name,
+            families: {}
+        };
 
+    });
 
-            roots[normalizedCode] = {
+    const memberMap = {};
 
-                code:
-                    root.code,
+    ancestryMembers.forEach(member => {
+        if (member.dbId) {
+            memberMap[member.dbId] = member;
+        }
+    });
 
-                name:
-                    root.name,
+    filteredMembers.forEach(member => {
 
-                families:
-                    {}
+        const rootCode =
+            (member.rootCode || "").toUpperCase();
 
+        if (!roots[rootCode]) {
+            return;
+        }
+
+        const familyName =
+            (member.familyName || "Unspecified Family").trim();
+
+        if (!roots[rootCode].families[familyName]) {
+
+            roots[rootCode].families[familyName] = {
+                fathers: {}
             };
 
         }
-    );
 
+        let fatherKey;
+        let father;
 
-    filteredMembers.forEach(
-        member => {
+/*
+ * REGISTERED FATHER
+ */
+if (member.immediateFatherId) {
 
-            const rootCode =
-                (member.rootCode || "").toUpperCase();
+    const registeredFather =
+        ancestryMembers.find(
+            fatherMember =>
+                String(fatherMember.dbId) ===
+                String(member.immediateFatherId)
+        );
 
+    if (registeredFather) {
 
-            if (
-                !roots[rootCode]
-            ) {
+        fatherKey =
+            "registered:" +
+            member.immediateFatherId;
 
-                return;
+        father =
+            registeredFather;
 
-            }
+    }
 
+}
 
-            const family =
-                member.familyName ||
-                "Unspecified Family";
+/*
+ * UNREGISTERED / MANUAL FATHER
+ */
+if (!father) {
 
+    const manualFather =
+        (member.father || "").trim();
 
-            if (
-                !roots[rootCode]
-                    .families[family]
-            ) {
+    if (manualFather) {
 
-                roots[rootCode]
-                    .families[family] = [];
+        fatherKey =
+            "manual:" +
+            manualFather.toLowerCase();
 
-            }
+        father = {
+            id: "",
+            name: manualFather,
+            registered: false
+        };
 
+    }
 
-            roots[rootCode]
-                .families[family]
-                .push(member);
+}
+
+        
+
+        /*
+         * No father recorded
+         */
+        if (!fatherKey) {
+
+            fatherKey = "unknown";
+
+            father = {
+                id: "",
+                name: "Father not recorded",
+                registered: false
+            };
 
         }
-    );
 
+        if (
+            !roots[rootCode]
+                .families[familyName]
+                .fathers[fatherKey]
+        ) {
+
+            roots[rootCode]
+                .families[familyName]
+                .fathers[fatherKey] = {
+
+                    father: father,
+                    children: []
+
+                };
+
+        }
+
+        roots[rootCode]
+            .families[familyName]
+            .fathers[fatherKey]
+            .children
+            .push(member);
+
+    });
 
     return roots;
-
 }
 
 
@@ -1669,16 +1746,13 @@ function buildTreeStructure(
    CALCULATE REQUIRED HEIGHTS (HORIZONTAL SPRAY)
 ============================================================ */
 
-function calculateFamilyHeight(
-    members
-) {
+function calculateFatherHeight(fatherGroup) {
 
     const count =
         Math.max(
-            members.length,
+            fatherGroup.children.length,
             1
         );
-
 
     const requiredHeight =
         count *
@@ -1686,24 +1760,57 @@ function calculateFamilyHeight(
         (count - 1) *
         MEMBER_GAP;
 
-
     return Math.max(
-        FAMILY_HEIGHT,
+        FATHER_HEIGHT,
         requiredHeight + 20
     );
 
 }
 
 
-function calculateRootHeight(
-    root
-) {
+function calculateFamilyHeight(family) {
+
+    const fatherKeys =
+        Object.keys(
+            family.fathers
+        );
+
+    if (
+        fatherKeys.length === 0
+    ) {
+
+        return FAMILY_HEIGHT + 40;
+
+    }
+
+    let height = 0;
+
+    fatherKeys.forEach(
+        fatherKey => {
+
+            height +=
+                calculateFatherHeight(
+                    family.fathers[fatherKey]
+                ) +
+                FAMILY_GAP;
+
+        }
+    );
+
+    return Math.max(
+        FAMILY_HEIGHT + 40,
+        height - FAMILY_GAP
+    );
+
+}
+
+
+function calculateRootHeight(root) {
 
     const familyNames =
         Object.keys(
             root.families
         );
-
 
     if (
         familyNames.length === 0
@@ -1713,29 +1820,23 @@ function calculateRootHeight(
 
     }
 
-
     let height = 0;
-
 
     familyNames.forEach(
         familyName => {
 
             height +=
                 calculateFamilyHeight(
-                    root.families[
-                        familyName
-                    ]
+                    root.families[familyName]
                 ) +
                 FAMILY_GAP;
 
         }
     );
 
-
     return Math.max(
         ROOT_HEIGHT + 40,
-        height -
-        FAMILY_GAP
+        height - FAMILY_GAP
     );
 
 }
@@ -1790,18 +1891,14 @@ function renderMap() {
 
     clearMap();
 
-
     const filteredMembers =
         getFilteredMembers();
-
 
     memberCount.textContent =
         ancestryMembers.length;
 
-
     displayedCount.textContent =
         filteredMembers.length;
-
 
     if (
         rootFilter.value.toUpperCase() === "ALL" &&
@@ -1818,21 +1915,21 @@ function renderMap() {
 
     }
 
-
     const tree =
         buildTreeStructure(
             filteredMembers
         );
 
-
     const rootKeys =
         officialRootFamilies
-            .map(root => (root.code || "").toUpperCase())
+            .map(
+                root =>
+                    (root.code || "").toUpperCase()
+            )
             .filter(
                 rootCode =>
                     tree[rootCode]
             );
-
 
     const rootHeights =
         rootKeys.map(
@@ -1842,7 +1939,6 @@ function renderMap() {
                 )
         );
 
-
     const totalRootHeight =
         rootHeights.reduce(
             (sum, height) =>
@@ -1850,12 +1946,13 @@ function renderMap() {
             0
         );
 
-
     const totalContentHeight =
         totalRootHeight +
-        Math.max(0, rootKeys.length - 1) *
+        Math.max(
+            0,
+            rootKeys.length - 1
+        ) *
         ROOT_GAP;
-
 
     const totalHeight =
         Math.max(
@@ -1863,47 +1960,47 @@ function renderMap() {
             totalContentHeight + 100
         );
 
-
-    const totalWidth = 1200;
-
+    const totalWidth =
+        1470;
 
     const centerY =
         totalHeight / 2;
 
 
-    addNode(
-        {
+    /*
+     * FOUNDATION
+     */
+    addNode({
 
-            x:
-                FOUNDATION_X,
+        x:
+            FOUNDATION_X,
 
-            y:
-                centerY -
-                FOUNDATION_HEIGHT / 2,
+        y:
+            centerY -
+            FOUNDATION_HEIGHT / 2,
 
-            width:
-                FOUNDATION_WIDTH,
+        width:
+            FOUNDATION_WIDTH,
 
-            height:
-                FOUNDATION_HEIGHT,
+        height:
+            FOUNDATION_HEIGHT,
 
-            title:
-                "UMUOTUTO",
+        title:
+            "UMUOTUTO",
 
-            subtitle:
-                "CLAN FOUNDATION",
+        subtitle:
+            "CLAN FOUNDATION",
 
-            type:
-                "foundation",
+        type:
+            "foundation",
 
-            colour:
-                "#4B1F7A",
+        colour:
+            "#4B1F7A",
 
-            textColour:
-                "#FFFFFF"
+        textColour:
+            "#FFFFFF"
 
-        }
-    );
+    });
 
 
     let currentY =
@@ -1913,6 +2010,9 @@ function renderMap() {
         ) / 2;
 
 
+    /*
+     * ROOT FAMILIES
+     */
     rootKeys.forEach(
         (
             rootCode,
@@ -1922,17 +2022,14 @@ function renderMap() {
             const root =
                 tree[rootCode];
 
-
             const rootHeight =
                 rootHeights[
                     rootIndex
                 ];
 
-
             const rootCenterY =
                 currentY +
                 rootHeight / 2;
-
 
             const rootColour =
                 ROOT_COLOURS[
@@ -1941,6 +2038,9 @@ function renderMap() {
                 "#AC5D1A";
 
 
+            /*
+             * FOUNDATION → ROOT
+             */
             addTreeBranch(
 
                 FOUNDATION_X +
@@ -1959,39 +2059,40 @@ function renderMap() {
             );
 
 
-            addNode(
-                {
+            /*
+             * ROOT NODE
+             */
+            addNode({
 
-                    x:
-                        ROOT_X,
+                x:
+                    ROOT_X,
 
-                    y:
-                        rootCenterY -
-                        ROOT_HEIGHT / 2,
+                y:
+                    rootCenterY -
+                    ROOT_HEIGHT / 2,
 
-                    width:
-                        ROOT_WIDTH,
+                width:
+                    ROOT_WIDTH,
 
-                    height:
-                        ROOT_HEIGHT,
+                height:
+                    ROOT_HEIGHT,
 
-                    title:
-                        root.name,
+                title:
+                    root.name,
 
-                    subtitle:
-                        "ROOT FAMILY",
+                subtitle:
+                    "ROOT FAMILY",
 
-                    type:
-                        "root",
+                type:
+                    "root",
 
-                    colour:
-                        rootColour,
+                colour:
+                    rootColour,
 
-                    textColour:
-                        "#FFFFFF"
+                textColour:
+                    "#FFFFFF"
 
-                }
-            );
+            });
 
 
             const familyNames =
@@ -1999,31 +2100,34 @@ function renderMap() {
                     root.families
                 );
 
-
             let familyCurrentY =
                 currentY;
 
 
+            /*
+             * FAMILY NAMES
+             */
             familyNames.forEach(
                 familyName => {
 
-                    const familyMembers =
+                    const family =
                         root.families[
                             familyName
                         ];
 
-
                     const familyHeight =
                         calculateFamilyHeight(
-                            familyMembers
+                            family
                         );
-
 
                     const familyCenterY =
                         familyCurrentY +
                         familyHeight / 2;
 
 
+                    /*
+                     * ROOT → FAMILY
+                     */
                     addTreeBranch(
 
                         ROOT_X +
@@ -2042,68 +2146,75 @@ function renderMap() {
                     );
 
 
-                    addNode(
-                        {
+                    /*
+                     * FAMILY NODE
+                     */
+                    addNode({
 
-                            x:
-                                FAMILY_X,
+                        x:
+                            FAMILY_X,
 
-                            y:
-                                familyCenterY -
-                                FAMILY_HEIGHT / 2,
+                        y:
+                            familyCenterY -
+                            FAMILY_HEIGHT / 2,
 
-                            width:
-                                FAMILY_WIDTH,
+                        width:
+                            FAMILY_WIDTH,
 
-                            height:
-                                FAMILY_HEIGHT,
+                        height:
+                            FAMILY_HEIGHT,
 
-                            title:
-                                familyName,
+                        title:
+                            familyName,
 
-                            subtitle:
-                                "FAMILY",
+                        subtitle:
+                            "FAMILY",
 
-                            type:
-                                "family",
+                        type:
+                            "family",
 
-                            colour:
-                                "#8C6B35",
+                        colour:
+                            "#8C6B35",
 
-                            textColour:
-                                "#FFFFFF"
+                        textColour:
+                            "#FFFFFF"
 
-                        }
-                    );
-
-
-                    const memberCountInFamily =
-                        familyMembers.length;
+                    });
 
 
-                    const membersTotalHeight =
-                        memberCountInFamily *
-                        MEMBER_HEIGHT +
-                        (
-                            memberCountInFamily -
-                            1
-                        ) *
-                        MEMBER_GAP;
+                    const fatherKeys =
+                        Object.keys(
+                            family.fathers
+                        );
+
+                    let fatherCurrentY =
+                        familyCurrentY;
 
 
-                    let memberStartY =
-                        familyCenterY -
-                        membersTotalHeight / 2;
+                    /*
+                     * FATHERS
+                     */
+                    fatherKeys.forEach(
+                        fatherKey => {
+
+                            const fatherGroup =
+                                family.fathers[
+                                    fatherKey
+                                ];
+
+                            const fatherHeight =
+                                calculateFatherHeight(
+                                    fatherGroup
+                                );
+
+                            const fatherCenterY =
+                                fatherCurrentY +
+                                fatherHeight / 2;
 
 
-                    familyMembers.forEach(
-                        member => {
-
-                            const memberCenterY =
-                                memberStartY +
-                                MEMBER_HEIGHT / 2;
-
-
+                            /*
+                             * FAMILY → FATHER
+                             */
                             addTreeBranch(
 
                                 FAMILY_X +
@@ -2111,9 +2222,9 @@ function renderMap() {
 
                                 familyCenterY,
 
-                                MEMBER_X,
+                                FATHER_X,
 
-                                memberCenterY,
+                                fatherCenterY,
 
                                 "#8C6B35",
 
@@ -2122,27 +2233,39 @@ function renderMap() {
                             );
 
 
-                            addNode(
-                                {
+                            const fatherMember =
+                                fatherGroup.father;
+
+
+                            /*
+                             * FATHER NODE
+                             */
+                            if (
+                                fatherMember &&
+                                fatherMember.id
+                            ) {
+
+                                addNode({
 
                                     x:
-                                        MEMBER_X,
+                                        FATHER_X,
 
                                     y:
-                                        memberStartY,
+                                        fatherCenterY -
+                                        FATHER_HEIGHT / 2,
 
                                     width:
-                                        MEMBER_WIDTH,
+                                        FATHER_WIDTH,
 
                                     height:
-                                        MEMBER_HEIGHT,
+                                        FATHER_HEIGHT,
 
                                     title:
-                                        member.name ||
+                                        fatherMember.name ||
                                         "Unnamed Member",
 
                                     subtitle:
-                                        member.id ||
+                                        fatherMember.id ||
                                         "No ID",
 
                                     type:
@@ -2155,15 +2278,141 @@ function renderMap() {
                                         "#351354",
 
                                     member:
-                                        member
+                                        fatherMember
+
+                                });
+
+                            } else {
+
+                                addNode({
+
+                                    x:
+                                        FATHER_X,
+
+                                    y:
+                                        fatherCenterY -
+                                        FATHER_HEIGHT / 2,
+
+                                    width:
+                                        FATHER_WIDTH,
+
+                                    height:
+                                        FATHER_HEIGHT,
+
+                                    title:
+                                        fatherMember.name ||
+                                        "Father not recorded",
+
+                                    subtitle:
+                                        "UNREGISTERED FATHER",
+
+                                    type:
+                                        "father",
+
+                                    colour:
+                                        "#D8C7A0",
+
+                                    textColour:
+                                        "#351354"
+
+                                });
+
+                            }
+
+
+                            /*
+                             * FATHER → CHILDREN
+                             */
+                            const children =
+                                fatherGroup.children;
+
+                            const childrenTotalHeight =
+                                children.length *
+                                MEMBER_HEIGHT +
+                                (
+                                    children.length - 1
+                                ) *
+                                MEMBER_GAP;
+
+                            let childStartY =
+                                fatherCenterY -
+                                childrenTotalHeight / 2;
+
+
+                            children.forEach(
+                                child => {
+
+                                    const childCenterY =
+                                        childStartY +
+                                        MEMBER_HEIGHT / 2;
+
+
+                                    addTreeBranch(
+
+                                        FATHER_X +
+                                            FATHER_WIDTH,
+
+                                        fatherCenterY,
+
+                                        MEMBER_X,
+
+                                        childCenterY,
+
+                                        "#8C6B35",
+
+                                        3
+
+                                    );
+
+
+                                    addNode({
+
+                                        x:
+                                            MEMBER_X,
+
+                                        y:
+                                            childStartY,
+
+                                        width:
+                                            MEMBER_WIDTH,
+
+                                        height:
+                                            MEMBER_HEIGHT,
+
+                                        title:
+                                            child.name ||
+                                            "Unnamed Member",
+
+                                        subtitle:
+                                            child.id ||
+                                            "No ID",
+
+                                        type:
+                                            "member",
+
+                                        colour:
+                                            "#EADFF0",
+
+                                        textColour:
+                                            "#351354",
+
+                                        member:
+                                            child
+
+                                    });
+
+
+                                    childStartY +=
+                                        MEMBER_HEIGHT +
+                                        MEMBER_GAP;
 
                                 }
                             );
 
 
-                            memberStartY +=
-                                MEMBER_HEIGHT +
-                                MEMBER_GAP;
+                            fatherCurrentY +=
+                                fatherHeight +
+                                FAMILY_GAP;
 
                         }
                     );
@@ -2190,18 +2439,14 @@ function renderMap() {
         `0 0 ${totalWidth} ${totalHeight}`
     );
 
-
     svg.style.width =
         totalWidth + "px";
-
 
     svg.style.minWidth =
         totalWidth + "px";
 
-
     svg.style.height =
         totalHeight + "px";
-
 
     autoFitMap(
         totalWidth,
@@ -2209,6 +2454,7 @@ function renderMap() {
     );
 
 }
+
 
 
 /* ============================================================
