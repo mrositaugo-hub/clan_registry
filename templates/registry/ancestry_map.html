@@ -16,7 +16,7 @@ Ancestry Map
     }
 
     /* =========================================================
-       HEADER
+       HEADER & ACTIONS
     ========================================================= */
 
     .ancestry-header {
@@ -48,9 +48,10 @@ Ancestry Map
     .map-control {
         border: none;
         border-radius: 9px;
-        padding: 10px 15px;
+        padding: 9px 14px;
         cursor: pointer;
         font-weight: 700;
+        font-size: 13px;
         background: var(--purple, #4B1F7A);
         color: white;
         transition: 0.2s ease;
@@ -67,6 +68,24 @@ Ancestry Map
 
     .map-control.secondary:hover {
         background: #8f4b13;
+    }
+
+    .map-control.export-btn {
+        background: #1E7A67;
+    }
+
+    .map-control.export-btn:hover {
+        background: #135446;
+    }
+
+    .map-control.outline-btn {
+        background: #ffffff;
+        color: var(--purple, #4B1F7A);
+        border: 1.5px solid var(--purple, #4B1F7A);
+    }
+
+    .map-control.outline-btn:hover {
+        background: #f4ecf8;
     }
 
     /* =========================================================
@@ -156,7 +175,7 @@ Ancestry Map
     }
 
     /* =========================================================
-       MAP AREA
+       MAP AREA & DRAG CANVAS
     ========================================================= */
 
     .map-wrapper {
@@ -188,8 +207,11 @@ Ancestry Map
         font-size: 13px;
     }
 
+    /* Fixed Viewport Height for Smooth 360° Panning */
     .map-scroll {
         width: 100%;
+        height: 700px;
+        max-height: 80vh;
         overflow: auto;
         border: 1px solid #e3dce8;
         border-radius: 12px;
@@ -200,22 +222,27 @@ Ancestry Map
                 transparent 1px
             );
         background-size: 22px 22px;
-        min-height: 620px;
+        cursor: grab;
+        position: relative;
+    }
+
+    .map-scroll:active {
+        cursor: grabbing;
     }
 
     #ancestryMap {
         display: block;
-        min-width: 950px;
+        min-width: 1100px;
         width: 100%;
-        min-height: 620px;
         height: auto;
-        touch-action: pan-x pan-y;
+        touch-action: none;
         transform-origin: top left;
         user-select: none;
+        transition: transform 0.15s ease-out;
     }
 
     /* =========================================================
-       TREE TEXT
+       TREE TEXT & NODES
     ========================================================= */
 
     .tree-text {
@@ -223,96 +250,62 @@ Ancestry Map
         pointer-events: none;
     }
 
-    .foundation-text {
-        font-size: 20px;
-        font-weight: 800;
-    }
-
-    .root-text {
-        font-size: 16px;
-        font-weight: 800;
-    }
-
-    .family-text {
-        font-size: 13px;
-        font-weight: 700;
-    }
-
-    .member-name {
-        font-size: 13px;
-        font-weight: 800;
-    }
-
-    .member-id {
-        font-size: 10px;
-    }
-
-    /* =========================================================
-       NODES
-    ========================================================= */
+    .foundation-text { font-size: 18px; font-weight: 800; }
+    .root-text { font-size: 15px; font-weight: 800; }
+    .family-name-text, .surname-text { font-size: 14px; font-weight: 800; }
+    .member-name { font-size: 13px; font-weight: 800; }
+    .member-sub { font-size: 10px; font-weight: 700; }
 
     .tree-node {
         cursor: pointer;
     }
 
     .tree-node rect {
-        transition:
-            transform 0.2s ease,
-            stroke-width 0.2s ease,
-            filter 0.2s ease;
+        transition: transform 0.2s ease, stroke-width 0.2s ease, filter 0.2s ease;
     }
 
     .tree-node:hover rect {
-        stroke-width: 4;
+        stroke-width: 3.5;
         filter: url(#nodeShadowStrong);
     }
 
+    .tree-node.selected-node rect {
+        stroke: #FFD700 !important;
+        stroke-width: 4px !important;
+        filter: url(#nodeShadowStrong);
+    }
+
+    .tree-node.search-match rect {
+        animation: pulseMatch 1.5s infinite alternate;
+    }
+
+    @keyframes pulseMatch {
+        0% { stroke: #FFD700; stroke-width: 3px; }
+        100% { stroke: #AC5D1A; stroke-width: 6px; }
+    }
+
     /* =========================================================
-       LEGEND
+       LEGEND & DETAILS
     ========================================================= */
 
     .map-legend {
         display: flex;
-        gap: 18px;
+        gap: 16px;
         flex-wrap: wrap;
         margin-top: 15px;
         color: #555;
-        font-size: 13px;
+        font-size: 12px;
     }
 
-    .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 7px;
-    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-colour { width: 13px; height: 13px; border-radius: 50%; display: inline-block; }
 
-    .legend-colour {
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        display: inline-block;
-    }
-
-    .legend-foundation {
-        background: #4B1F7A;
-    }
-
-    .legend-root {
-        background: #AC5D1A;
-    }
-
-    .legend-family {
-        background: #8C6B35;
-    }
-
-    .legend-member {
-        background: #eadff0;
-        border: 2px solid #4B1F7A;
-    }
-
-    /* =========================================================
-       MEMBER DETAILS
-    ========================================================= */
+    .legend-foundation { background: #4B1F7A; }
+    .legend-root { background: #AC5D1A; }
+    .legend-fam { background: #2E5A88; }
+    .legend-sur { background: #1E7A67; }
+    .legend-father { background: #D8C7A0; border: 2px solid #8C6B35; }
+    .legend-member { background: #EADFF0; border: 2px solid #4B1F7A; }
 
     .member-details {
         display: none;
@@ -323,14 +316,8 @@ Ancestry Map
         border: 1px solid #e2d6eb;
     }
 
-    .member-details.visible {
-        display: block;
-    }
-
-    .member-details h3 {
-        margin-top: 0;
-        color: var(--purple, #4B1F7A);
-    }
+    .member-details.visible { display: block; }
+    .member-details h3 { margin-top: 0; color: var(--purple, #4B1F7A); }
 
     .member-details-grid {
         display: grid;
@@ -345,440 +332,157 @@ Ancestry Map
         border: 1px solid #eee8f2;
     }
 
-    .detail-item span {
-        display: block;
-        font-size: 11px;
-        color: #777;
-        margin-bottom: 4px;
+    .detail-item.full-width {
+        grid-column: 1 / -1;
     }
 
-    .detail-item strong {
-        color: #333;
-        overflow-wrap: anywhere;
-    }
+    .detail-item span { display: block; font-size: 11px; color: #777; margin-bottom: 4px; }
+    .detail-item strong { color: #333; overflow-wrap: anywhere; }
 
-    /* =========================================================
-       MOBILE
-    ========================================================= */
+    .breadcrumb-path {
+        color: var(--purple, #4B1F7A) !important;
+        font-size: 13px;
+    }
 
     @media (max-width: 900px) {
-
-        .ancestry-layout {
-            grid-template-columns: 1fr;
-        }
-
-        .ancestry-sidebar {
-            order: 1;
-        }
-
-        .map-wrapper {
-            order: 2;
-        }
+        .ancestry-layout { grid-template-columns: 1fr; }
+        .ancestry-sidebar { order: 1; }
+        .map-wrapper { order: 2; }
     }
 
     @media (max-width: 600px) {
-
-        .member-details-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .map-actions {
-            width: 100%;
-        }
-
-        .map-control {
-            flex: 1;
-        }
-
-        .ancestry-header h2 {
-            font-size: 23px;
-        }
+        .member-details-grid { grid-template-columns: 1fr; }
+        .map-actions { width: 100%; }
+        .map-control { flex: 1; }
+        .ancestry-header h2 { font-size: 23px; }
     }
 </style>
 
 <div class="ancestry-page">
 
-    <!-- =====================================================
-         HEADER
-    ====================================================== -->
-
+    <!-- HEADER -->
     <div class="ancestry-header">
-
         <div>
             <h2>Ancestry Map</h2>
-
-            <p>
-                Explore the recorded roots, families and
-                members of UMUOTUTO.
-            </p>
+            <p>Explore the structured lineage breakdown of UMUOTUTO.</p>
         </div>
 
         <div class="map-actions">
-
-            <button
-                type="button"
-                class="map-control"
-                id="zoomIn"
-            >
-                ＋ Zoom
-            </button>
-
-            <button
-                type="button"
-                class="map-control"
-                id="zoomOut"
-            >
-                － Zoom
-            </button>
-
-            <button
-                type="button"
-                class="map-control secondary"
-                id="resetMap"
-            >
-                Reset
-            </button>
-
+            <button type="button" class="map-control outline-btn" id="expandAllBtn"> Expand All</button>
+            <button type="button" class="map-control outline-btn" id="collapseAllBtn"> Collapse All</button>
+            <button type="button" class="map-control" id="zoomIn">＋ Zoom</button>
+            <button type="button" class="map-control" id="zoomOut">－ Zoom</button>
+            <button type="button" class="map-control secondary" id="resetMap">Fit View</button>
+            <button type="button" class="map-control export-btn" id="exportSvg">⬇ Export SVG</button>
         </div>
-
     </div>
 
-
-    <!-- =====================================================
-         MAIN LAYOUT
-    ====================================================== -->
-
+    <!-- MAIN LAYOUT -->
     <div class="ancestry-layout">
 
-
-        <!-- =================================================
-             SIDEBAR
-        ================================================== -->
-
+        <!-- SIDEBAR -->
         <aside class="ancestry-sidebar">
-
             <h3>Map Filters</h3>
 
-            <label for="rootFilter">
-                Root Family
-            </label>
-
+            <label for="rootFilter">Root Family</label>
             <select id="rootFilter">
-
-                <option value="ALL">
-                    All Root Families
-                </option>
-
+                <option value="ALL">All Root Families</option>
                 {% for root in family_roots %}
-
-                    <option value="{{ root.code }}">
-                        {{ root.name }}
-                    </option>
-
+                    <option value="{{ root.code }}">{{ root.name }}</option>
                 {% endfor %}
-
             </select>
 
-
-            <label for="memberSearch">
-                Search Member
-            </label>
-
+            <label for="memberSearch">Search Member</label>
             <input
                 type="search"
                 id="memberSearch"
-                placeholder="Search by name or ID..."
+                placeholder="Search by name, surname, family or ID..."
             >
 
-
             <div class="ancestry-stat">
-
-                <span>
-                    Total Recorded Members
-                </span>
-
-                <strong id="memberCount">
-                    {{ members|length }}
-                </strong>
-
+                <span>Total Recorded Members</span>
+                <strong id="memberCount">{{ members|length }}</strong>
             </div>
 
-
             <div class="ancestry-stat">
-
-                <span>
-                    Displayed Members
-                </span>
-
-                <strong id="displayedCount">
-                    {{ members|length }}
-                </strong>
-
+                <span>Displayed Members</span>
+                <strong id="displayedCount">{{ members|length }}</strong>
             </div>
-
 
             <div class="map-message">
-
-                <strong>How the tree works</strong>
-
+                <strong>Tree Hierarchy Levels</strong>
+                <br><br>
+                1. <strong>Foundation:</strong> UMUOTUTO
                 <br>
-
-                UMUOTUTO is the main foundation on the left.
-
-                <br><br>
-
-                Root families branch out horizontally to the right,
-                followed by family names, and registered members.
-
-                <br><br>
-
-                Select a member to view their recorded
-                registry information.
-
+                2. <strong>Family Root:</strong> Root clan branch
+                <br>
+                3. <strong>Family Name:</strong> Family unit
+                <br>
+                4. <strong>Surname:</strong> Surname lineage
+                <br>
+                5. <strong>Immediate Father:</strong> Direct parent
+                <br>
+                6. <strong>Children:</strong> Descendants
             </div>
-
         </aside>
 
-
-        <!-- =================================================
-             MAP
-        ================================================== -->
-
+        <!-- MAP CANVAS -->
         <section class="map-wrapper">
 
             <div class="map-toolbar">
-
-                <strong>
-                    UMUOTUTO Family Tree
-                </strong>
-
-                <span id="mapStatus">
-                    Showing all recorded members
-                </span>
-
+                <strong>UMUOTUTO Family Tree</strong>
+                <span id="mapStatus">Showing all recorded members</span>
             </div>
 
-
             <div class="map-scroll">
-
                 <svg
                     id="ancestryMap"
-                    viewBox="0 0 1200 750"
+                    viewBox="0 0 1600 750"
                     role="img"
                     aria-label="UMUOTUTO ancestry tree"
                     xmlns="http://www.w3.org/2000/svg"
                 >
-
                     <defs>
-
-                        <filter
-                            id="nodeShadow"
-                            x="-30%"
-                            y="-30%"
-                            width="160%"
-                            height="160%"
-                        >
-
-                            <feDropShadow
-                                dx="0"
-                                dy="3"
-                                stdDeviation="3"
-                                flood-opacity="0.15"
-                            />
-
+                        <filter id="nodeShadow" x="-30%" y="-30%" width="160%" height="160%">
+                            <feDropShadow dx="0" dy="3" stdDeviation="3" flood-opacity="0.15" />
                         </filter>
-
-
-                        <filter
-                            id="nodeShadowStrong"
-                            x="-30%"
-                            y="-30%"
-                            width="160%"
-                            height="160%"
-                        >
-
-                            <feDropShadow
-                                dx="0"
-                                dy="5"
-                                stdDeviation="5"
-                                flood-opacity="0.25"
-                            />
-
+                        <filter id="nodeShadowStrong" x="-30%" y="-30%" width="160%" height="160%">
+                            <feDropShadow dx="0" dy="5" stdDeviation="5" flood-opacity="0.25" />
                         </filter>
-
                     </defs>
 
-
                     <g id="mapConnections"></g>
-
                     <g id="mapNodes"></g>
-
                 </svg>
-
             </div>
 
-
-            <!-- =================================================
-                 LEGEND
-            ================================================== -->
-
+            <!-- LEGEND -->
             <div class="map-legend">
-
-                <div class="legend-item">
-
-                    <span
-                        class="legend-colour legend-foundation"
-                    ></span>
-
-                    UMUOTUTO Foundation
-
-                </div>
-
-
-                <div class="legend-item">
-
-                    <span
-                        class="legend-colour legend-root"
-                    ></span>
-
-                    Root Family
-
-                </div>
-
-
-                <div class="legend-item">
-
-                    <span
-                        class="legend-colour legend-family"
-                    ></span>
-
-                    Family
-
-                </div>
-
-
-                <div class="legend-item">
-
-                    <span
-                        class="legend-colour legend-member"
-                    ></span>
-
-                    Registered Member
-
-                </div>
-
+                <div class="legend-item"><span class="legend-colour legend-foundation"></span> Foundation</div>
+                <div class="legend-item"><span class="legend-colour legend-root"></span> Root Family</div>
+                <div class="legend-item"><span class="legend-colour legend-fam"></span> Family Name</div>
+                <div class="legend-item"><span class="legend-colour legend-sur"></span> Surname</div>
+                <div class="legend-item"><span class="legend-colour legend-father"></span> Immediate Father</div>
+                <div class="legend-item"><span class="legend-colour legend-member"></span> Registered Member</div>
             </div>
 
-
-            <!-- =================================================
-                 MEMBER DETAILS
-            ================================================== -->
-
-            <div
-                class="member-details"
-                id="memberDetails"
-            >
-
-                <h3 id="detailsName">
-                    Member Details
-                </h3>
-
-
+            <!-- MEMBER DETAILS -->
+            <div class="member-details" id="memberDetails">
+                <h3 id="detailsName">Member Details</h3>
                 <div class="member-details-grid">
-
-
-                    <div class="detail-item">
-
-                        <span>
-                            Automatic ID
-                        </span>
-
-                        <strong id="detailsId">
-                            —
-                        </strong>
-
+                    <div class="detail-item full-width">
+                        <span>Ancestry Lineage Path</span>
+                        <strong id="detailsBreadcrumb" class="breadcrumb-path">—</strong>
                     </div>
-
-
-                    <div class="detail-item">
-
-                        <span>
-                            Root Family
-                        </span>
-
-                        <strong id="detailsRoot">
-                            —
-                        </strong>
-
-                    </div>
-
-
-                    <div class="detail-item">
-
-                        <span>
-                            Family Name
-                        </span>
-
-                        <strong id="detailsFamily">
-                            —
-                        </strong>
-
-                    </div>
-
-
-                    <div class="detail-item">
-
-                        <span>
-                            Father
-                        </span>
-
-                        <strong id="detailsFather">
-                            —
-                        </strong>
-
-                    </div>
-
-
-                    <div class="detail-item">
-
-                        <span>
-                            Mother
-                        </span>
-
-                        <strong id="detailsMother">
-                            —
-                        </strong>
-
-                    </div>
-
-
-                    <div class="detail-item">
-
-                        <span>
-                            Date of Birth
-                        </span>
-
-                        <strong id="detailsDob">
-                            —
-                        </strong>
-
-                    </div>
-
-
-                    <div class="detail-item">
-
-                        <span>
-                            Place of Birth
-                        </span>
-
-                        <strong id="detailsBirthPlace">
-                            —
-                        </strong>
-
-                    </div>
-
+                    <div class="detail-item"><span>Automatic ID</span><strong id="detailsId">—</strong></div>
+                    <div class="detail-item"><span>Root Family</span><strong id="detailsRoot">—</strong></div>
+                    <div class="detail-item"><span>Family Name</span><strong id="detailsFamily">—</strong></div>
+                    <div class="detail-item"><span>Surname</span><strong id="detailsSurname">—</strong></div>
+                    <div class="detail-item"><span>Father</span><strong id="detailsFather">—</strong></div>
+                    <div class="detail-item"><span>Mother</span><strong id="detailsMother">—</strong></div>
+                    <div class="detail-item"><span>Date of Birth</span><strong id="detailsDob">—</strong></div>
+                    <div class="detail-item"><span>Place of Birth</span><strong id="detailsBirthPlace">—</strong></div>
                 </div>
-
             </div>
 
         </section>
@@ -790,1963 +494,867 @@ Ancestry Map
 <script>
 
 /* ============================================================
-   UMUOTUTO ANCESTRY DATA
+   DATA REGISTRY IMPORT
 ============================================================ */
 
 const ancestryMembers = [
-
     {% for member in members %}
-
     {
-        dbId: 
-            "{{ member.pk|default:''|escapejs }}",
-
-        id:
-            "{{ member.aut_id|default:''|escapejs }}",
-
-        name:
-            "{% if member.surname %}{{ member.surname|escapejs }}{% endif %}{% if member.firstname %} {{ member.firstname|escapejs }}{% endif %}{% if member.middlename %} {{ member.middlename|escapejs }}{% endif %}",
-
-        surname:
-            "{{ member.surname|default:''|escapejs }}",
-
-        firstname:
-            "{{ member.firstname|default:''|escapejs }}",
-
-        middlename:
-            "{{ member.middlename|default:''|escapejs }}",
-
-        rootCode:
-            "{{ member.family_root|default:''|escapejs }}",
-
-        rootName:
-            "{{ member.get_family_root_display|default:''|escapejs }}",
-
-        familyName:
-            "{{ member.family_name|default:''|escapejs }}",
-        
-        immediateFatherId:
-            "{{ member.immediate_father_id|default:''|escapejs }}",
-
-        father:
-            "{{ member.immediate_fathers_name|default:''|escapejs }}",
-
-        mother:
-            "{{ member.mother_name|default:''|escapejs }}",
-
-        dob:
-            "{{ member.date_of_birth|date:'d M Y'|default:''|escapejs }}",
-
-        birthPlace:
-            "{{ member.place_of_birth|default:''|escapejs }}"
+        dbId: "{{ member.pk|default:''|escapejs }}",
+        id: "{{ member.aut_id|default:''|escapejs }}",
+        name: "{% if member.surname %}{{ member.surname|escapejs }}{% endif %}{% if member.firstname %} {{ member.firstname|escapejs }}{% endif %}{% if member.middlename %} {{ member.middlename|escapejs }}{% endif %}".trim(),
+        surname: "{{ member.surname|default:''|escapejs }}",
+        firstname: "{{ member.firstname|default:''|escapejs }}",
+        middlename: "{{ member.middlename|default:''|escapejs }}",
+        rootCode: "{{ member.family_root|default:''|escapejs }}",
+        rootName: "{{ member.get_family_root_display|default:''|escapejs }}",
+        familyName: "{{ member.family_name|default:''|escapejs }}",
+        immediateFatherId: "{{ member.immediate_father_id|default:''|escapejs }}",
+        father: "{{ member.immediate_fathers_name|default:''|escapejs }}",
+        mother: "{{ member.mother_name|default:''|escapejs }}",
+        dob: "{{ member.date_of_birth|date:'d M Y'|default:''|escapejs }}",
+        birthPlace: "{{ member.place_of_birth|default:''|escapejs }}"
     },
-
     {% endfor %}
-
 ];
-
-
-/* ============================================================
-   ALL THREE OFFICIAL ROOT FAMILIES
-============================================================ */
 
 const officialRootFamilies = [
-
     {% for root in family_roots %}
-
     {
-        code:
-            "{{ root.code|escapejs }}",
-
-        name:
-            "{{ root.name|escapejs }}"
+        code: "{{ root.code|escapejs }}",
+        name: "{{ root.name|escapejs }}"
     },
-
     {% endfor %}
-
 ];
 
-
 /* ============================================================
-   ELEMENTS
+   ELEMENTS & CONFIG
 ============================================================ */
 
-const svg =
-    document.getElementById("ancestryMap");
+const svg = document.getElementById("ancestryMap");
+const mapScrollContainer = document.querySelector(".map-scroll");
+const connectionsGroup = document.getElementById("mapConnections");
+const nodesGroup = document.getElementById("mapNodes");
+const rootFilter = document.getElementById("rootFilter");
+const memberSearch = document.getElementById("memberSearch");
+const memberCount = document.getElementById("memberCount");
+const displayedCount = document.getElementById("displayedCount");
+const mapStatus = document.getElementById("mapStatus");
+const memberDetails = document.getElementById("memberDetails");
 
-const mapScrollContainer =
-    document.querySelector(".map-scroll");
-
-const connectionsGroup =
-    document.getElementById("mapConnections");
-
-const nodesGroup =
-    document.getElementById("mapNodes");
-
-const rootFilter =
-    document.getElementById("rootFilter");
-
-const memberSearch =
-    document.getElementById("memberSearch");
-
-const memberCount =
-    document.getElementById("memberCount");
-
-const displayedCount =
-    document.getElementById("displayedCount");
-
-const mapStatus =
-    document.getElementById("mapStatus");
-
-const memberDetails =
-    document.getElementById("memberDetails");
-
-const detailsName =
-    document.getElementById("detailsName");
-
-const detailsId =
-    document.getElementById("detailsId");
-
-const detailsRoot =
-    document.getElementById("detailsRoot");
-
-const detailsFamily =
-    document.getElementById("detailsFamily");
-
-const detailsFather =
-    document.getElementById("detailsFather");
-
-const detailsMother =
-    document.getElementById("detailsMother");
-
-const detailsDob =
-    document.getElementById("detailsDob");
-
-const detailsBirthPlace =
-    document.getElementById("detailsBirthPlace");
-
-
-/* ============================================================
-   MAP DIMENSIONS (HORIZONTAL LEFT-TO-RIGHT LAYOUT)
-============================================================ */
+const detailsName = document.getElementById("detailsName");
+const detailsBreadcrumb = document.getElementById("detailsBreadcrumb");
+const detailsId = document.getElementById("detailsId");
+const detailsRoot = document.getElementById("detailsRoot");
+const detailsFamily = document.getElementById("detailsFamily");
+const detailsSurname = document.getElementById("detailsSurname");
+const detailsFather = document.getElementById("detailsFather");
+const detailsMother = document.getElementById("detailsMother");
+const detailsDob = document.getElementById("detailsDob");
+const detailsBirthPlace = document.getElementById("detailsBirthPlace");
 
 let currentScale = 1;
+let activeSelectedMemberId = null;
+let collapsedNodes = new Set();
+let allNodeKeys = [];
 
-const FOUNDATION_X = 50;
-const FOUNDATION_WIDTH = 260;
-const FOUNDATION_HEIGHT = 80;
+/* LEVEL POSITIONS (X AXIS) & SIZES */
+const FOUNDATION_X = 40;
+const FOUNDATION_W = 190;
 
-const ROOT_X = 370;
-const ROOT_WIDTH = 230;
-const ROOT_HEIGHT = 65;
+const ROOT_X = 270;
+const ROOT_W = 180;
 
-const FAMILY_X = 660;
-const FAMILY_WIDTH = 210;
-const FAMILY_HEIGHT = 54;
+const FAM_X = 490;
+const FAM_W = 170;
 
-const FATHER_X = 930;
-const FATHER_WIDTH = 190;
-const FATHER_HEIGHT = 70;
+const SUR_X = 700;
+const SUR_W = 160;
 
-const MEMBER_X = 1200;
-const MEMBER_WIDTH = 190;
-const MEMBER_HEIGHT = 70;
-
-const MEMBER_GAP = 20;
-const FAMILY_GAP = 40;
-const ROOT_GAP = 90;
-
-
-/* ============================================================
-   ROOT FAMILY COLOURS
-============================================================ */
+const LINEAGE_START_X = 900;
+const MEMBER_W = 180;
+const LEVEL_GAP_X = 220;
+const NODE_GAP_Y = 16;
 
 const ROOT_COLOURS = {
-
     "UMUNANGWU": "#AC5D1A",
-
     "UMUGBANOKE": "#7C4D9F",
-
     "UMUCHUKWU": "#8C6B35"
-
 };
 
-
 /* ============================================================
-   UTILITY
+   UTILITY & SVG
 ============================================================ */
 
-function createSvgElement(
-    tag,
-    attributes = {}
-) {
-
-    const element =
-        document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            tag
-        );
-
-    Object.entries(attributes).forEach(
-        ([key, value]) => {
-
-            element.setAttribute(
-                key,
-                value
-            );
-
-        }
-    );
-
-    return element;
-
+function createSvgElement(tag, attributes = {}) {
+    const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    Object.entries(attributes).forEach(([k, v]) => el.setAttribute(k, v));
+    return el;
 }
-
 
 function clearMap() {
-
     connectionsGroup.innerHTML = "";
-
     nodesGroup.innerHTML = "";
-
 }
 
+function addTreeBranch(x1, y1, x2, y2, colour, width = 3) {
+    const horizDist = Math.abs(x2 - x1);
+    const vertDist = Math.abs(y2 - y1);
+    const curve = Math.max(25, Math.min(horizDist * 0.5, vertDist * 0.5));
 
-/* ============================================================
-   TEXT WRAPPING
-============================================================ */
+    const path = createSvgElement("path", {
+        d: `M ${x1} ${y1} C ${x1 + curve} ${y1}, ${x2 - curve} ${y2}, ${x2} ${y2}`,
+        fill: "none",
+        stroke: colour,
+        "stroke-width": width,
+        "stroke-linecap": "round",
+        opacity: 0.85
+    });
 
-function addWrappedText(
-    group,
-    text,
-    x,
-    y,
-    maxCharacters,
-    className,
-    fill
-) {
+    connectionsGroup.appendChild(path);
+}
 
-    const cleanText =
-        String(text || "Unnamed Member").trim();
-
-    const words =
-        cleanText.split(/\s+/);
-
+function addWrappedText(group, text, x, y, maxChars, className, fill) {
+    const cleanText = String(text || "N/A").trim();
+    const words = cleanText.split(/\s+/);
     let lines = [];
-
     let currentLine = "";
 
     words.forEach(word => {
-
-        const testLine =
-            currentLine
-                ? currentLine + " " + word
-                : word;
-
-        if (
-            testLine.length >
-            maxCharacters &&
-            currentLine
-        ) {
-
+        const test = currentLine ? currentLine + " " + word : word;
+        if (test.length > maxChars && currentLine) {
             lines.push(currentLine);
-
             currentLine = word;
-
         } else {
-
-            currentLine = testLine;
-
+            currentLine = test;
         }
-
     });
-
-
-    if (currentLine) {
-
-        lines.push(currentLine);
-
-    }
-
+    if (currentLine) lines.push(currentLine);
 
     if (lines.length > 2) {
-
-        lines = [
-            lines[0],
-            lines.slice(1).join(" ")
-        ];
-
+        lines = [lines[0], lines.slice(1).join(" ")];
     }
 
+    lines.forEach((line, idx) => {
+        const txt = createSvgElement("text", {
+            x: x,
+            y: y + idx * 14,
+            "text-anchor": "middle",
+            fill: fill,
+            class: className
+        });
+        txt.textContent = line;
+        group.appendChild(txt);
+    });
+}
 
-    lines.forEach(
-        (line, index) => {
-
-            const textElement =
-                createSvgElement(
-                    "text",
-                    {
-
-                        x: x,
-
-                        y:
-                            y +
-                            index * 16,
-
-                        "text-anchor":
-                            "middle",
-
-                        fill:
-                            fill,
-
-                        class:
-                            className
-
-                    }
-                );
-
-
-            textElement.textContent =
-                line;
-
-
-            group.appendChild(
-                textElement
-            );
-
+/* Calculate member count under branch */
+function countBranchMembers(node) {
+    if (!node) return 0;
+    if (node.type === "member") {
+        let count = 1;
+        if (node.children) {
+            node.children.forEach(c => count += countBranchMembers(c));
         }
-    );
-
+        return count;
+    }
+    let total = 0;
+    if (node.children) {
+        node.children.forEach(c => total += countBranchMembers(c));
+    }
+    return total;
 }
 
-
 /* ============================================================
-   HORIZONTAL ORGANIC TREE BRANCH (LEFT TO RIGHT)
+   RENDER NODE CARDS WITH SELECTION & COLLAPSE TOGGLE
 ============================================================ */
 
-function addTreeBranch(
-    x1,
-    y1,
-    x2,
-    y2,
-    colour,
-    width = 5
-) {
-
-    const horizontalDistance =
-        Math.abs(x2 - x1);
-
-    const verticalDistance =
-        Math.abs(y2 - y1);
-
-
-    const curve =
-        Math.max(
-            30,
-            Math.min(
-                horizontalDistance * 0.5,
-                verticalDistance * 0.5
-            )
-        );
-
-
-    const path =
-        createSvgElement(
-            "path",
-            {
-
-                d:
-                    `M ${x1} ${y1}
-                     C ${x1 + curve} ${y1},
-                       ${x2 - curve} ${y2},
-                       ${x2} ${y2}`,
-
-                fill:
-                    "none",
-
-                stroke:
-                    colour,
-
-                "stroke-width":
-                    width,
-
-                "stroke-linecap":
-                    "round",
-
-                opacity:
-                    0.82
-
-            }
-        );
-
-
-    connectionsGroup.appendChild(
-        path
-    );
-
-}
-
-
-/* ============================================================
-   NODE CREATION
-============================================================ */
-
-function addNode(
-    config
-) {
-
-    const {
-
-        x,
-        y,
-        width,
-        height,
-        title,
-        subtitle,
-        type,
-        colour,
-        textColour = "#FFFFFF",
-        member = null
-
-    } = config;
-
-
-    const group =
-        createSvgElement(
-            "g",
-            {
-
-                class:
-                    "tree-node",
-
-                transform:
-                    `translate(${x}, ${y})`
-
-            }
-        );
-
-
-    const rect =
-        createSvgElement(
-            "rect",
-            {
-
-                x:
-                    0,
-
-                y:
-                    0,
-
-                width:
-                    width,
-
-                height:
-                    height,
-
-                rx:
-                    type === "member"
-                        ? 15
-                        : 18,
-
-                fill:
-                    colour,
-
-                stroke:
-                    type === "member"
-                        ? "#4B1F7A"
-                        : colour,
-
-                "stroke-width":
-                    type === "member"
-                        ? 2
-                        : 3,
-
-                filter:
-                    "url(#nodeShadow)"
-
-            }
-        );
-
-
-    group.appendChild(
-        rect
-    );
-
-
-    if (
-        type === "foundation"
-    ) {
-
-        const titleText =
-            createSvgElement(
-                "text",
-                {
-
-                    x:
-                        width / 2,
-
-                    y:
-                        35,
-
-                    "text-anchor":
-                        "middle",
-
-                    fill:
-                        textColour,
-
-                    class:
-                        "tree-text foundation-text"
-
-                }
-            );
-
-
-        titleText.textContent =
-            title;
-
-
-        group.appendChild(
-            titleText
-        );
-
-
-        const subtitleText =
-            createSvgElement(
-                "text",
-                {
-
-                    x:
-                        width / 2,
-
-                    y:
-                        60,
-
-                    "text-anchor":
-                        "middle",
-
-                    fill:
-                        textColour,
-
-                    class:
-                        "tree-text"
-
-                }
-            );
-
-
-        subtitleText.textContent =
-            subtitle;
-
-
-        group.appendChild(
-            subtitleText
-        );
-
+function drawNodeCard(config) {
+    const { idKey, x, y, width, height, title, subtitle, type, rootCode, member = null, descCount = 0, hasChildren = false, isCollapsed = false, isSearchMatch = false } = config;
+
+    let bg = "#EADFF0";
+    let border = "#4B1F7A";
+    let textCol = "#351354";
+
+    if (type === "foundation") {
+        bg = "#4B1F7A"; border = "#4B1F7A"; textCol = "#FFFFFF";
+    } else if (type === "root") {
+        bg = ROOT_COLOURS[rootCode] || "#AC5D1A"; border = bg; textCol = "#FFFFFF";
+    } else if (type === "family_name") {
+        bg = "#2E5A88"; border = "#1F4268"; textCol = "#FFFFFF";
+    } else if (type === "surname") {
+        bg = "#1E7A67"; border = "#135446"; textCol = "#FFFFFF";
+    } else if (type === "father") {
+        bg = "#D8C7A0"; border = "#8C6B35"; textCol = "#351354";
     }
 
-
-    else if (
-        type === "member"
-    ) {
-
-        addWrappedText(
-            group,
-            title,
-            width / 2,
-            26,
-            23,
-            "tree-text member-name",
-            textColour
-        );
-
-
-        const subtitleText =
-            createSvgElement(
-                "text",
-                {
-
-                    x:
-                        width / 2,
-
-                    y:
-                        58,
-
-                    "text-anchor":
-                        "middle",
-
-                    fill:
-                        textColour,
-
-                    class:
-                        "tree-text member-id"
-
-                }
-            );
-
-
-        subtitleText.textContent =
-            subtitle;
-
-
-        group.appendChild(
-            subtitleText
-        );
-
+    let nodeClasses = "tree-node";
+    if (member && member.dbId && activeSelectedMemberId === member.dbId) {
+        nodeClasses += " selected-node";
+    }
+    if (isSearchMatch) {
+        nodeClasses += " search-match";
     }
 
+    const group = createSvgElement("g", {
+        class: nodeClasses,
+        transform: `translate(${x}, ${y})`,
+        "data-x": x,
+        "data-y": y
+    });
 
+    const rect = createSvgElement("rect", {
+        x: 0, y: 0,
+        width: width, height: height,
+        rx: (type === "member" || type === "father") ? 12 : 16,
+        fill: bg,
+        stroke: border,
+        "stroke-width": 2,
+        filter: "url(#nodeShadow)"
+    });
+    group.appendChild(rect);
+
+    const formattedSubtitle = descCount > 0 ? `${subtitle} (${descCount})` : subtitle;
+
+    if (type === "foundation" || type === "root") {
+        const titleTxt = createSvgElement("text", {
+            x: width / 2, y: 28, "text-anchor": "middle", fill: textCol, class: "tree-text foundation-text"
+        });
+        titleTxt.textContent = title;
+        group.appendChild(titleTxt);
+
+        const subTxt = createSvgElement("text", {
+            x: width / 2, y: 48, "text-anchor": "middle", fill: textCol, class: "tree-text member-sub"
+        });
+        subTxt.textContent = formattedSubtitle;
+        group.appendChild(subTxt);
+    } 
+    else if (type === "family_name" || type === "surname") {
+        addWrappedText(group, title, width / 2, 22, 18, "tree-text family-name-text", textCol);
+        
+        const subTxt = createSvgElement("text", {
+            x: width / 2, y: height - 12, "text-anchor": "middle", fill: textCol, class: "tree-text member-sub"
+        });
+        subTxt.textContent = formattedSubtitle;
+        group.appendChild(subTxt);
+    } 
     else {
+        addWrappedText(group, title, width / 2, 20, 18, "tree-text member-name", textCol);
 
-        addWrappedText(
-            group,
-            title,
-            width / 2,
-            25,
-            24,
-            "tree-text " +
-                (
-                    type === "root"
-                        ? "root-text"
-                        : "family-text"
-                ),
-            textColour
-        );
-
-
-        if (subtitle) {
-
-            const subtitleText =
-                createSvgElement(
-                    "text",
-                    {
-
-                        x:
-                            width / 2,
-
-                        y:
-                            height - 12,
-
-                        "text-anchor":
-                            "middle",
-
-                        fill:
-                            textColour,
-
-                        class:
-                            "tree-text"
-
-                    }
-                );
-
-
-            subtitleText.textContent =
-                subtitle;
-
-
-            group.appendChild(
-                subtitleText
-            );
-
-        }
-
+        const subTxt = createSvgElement("text", {
+            x: width / 2, y: height - 12, "text-anchor": "middle", fill: type === "father" ? "#6f4a13" : "#5B2A86", class: "tree-text member-sub"
+        });
+        subTxt.textContent = formattedSubtitle;
+        group.appendChild(subTxt);
     }
 
+    /* COLLAPSE/EXPAND BADGE */
+    if (hasChildren && idKey) {
+        const badgeG = createSvgElement("g", { transform: `translate(${width - 12}, ${height / 2})` });
+        const badgeBg = createSvgElement("circle", { r: 10, fill: "#ffffff", stroke: border, "stroke-width": 1.5 });
+        const badgeTxt = createSvgElement("text", {
+            x: 0, y: 4, "text-anchor": "middle", fill: border, "font-size": "12px", "font-weight": "bold"
+        });
+        badgeTxt.textContent = isCollapsed ? "+" : "−";
+        
+        badgeG.appendChild(badgeBg);
+        badgeG.appendChild(badgeTxt);
+        group.appendChild(badgeG);
+
+        badgeG.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (collapsedNodes.has(idKey)) {
+                collapsedNodes.delete(idKey);
+            } else {
+                collapsedNodes.add(idKey);
+            }
+            renderMap();
+        });
+    }
 
     if (member) {
-
-        group.addEventListener(
-            "click",
-            () => {
-
-                showMemberDetails(
-                    member
-                );
-
-            }
-        );
-
+        group.addEventListener("click", () => {
+            activeSelectedMemberId = member.dbId;
+            document.querySelectorAll(".tree-node").forEach(n => n.classList.remove("selected-node"));
+            group.classList.add("selected-node");
+            showMemberDetails(member);
+        });
     }
 
-
-    nodesGroup.appendChild(
-        group
-    );
-
+    nodesGroup.appendChild(group);
+    return group;
 }
 
+function showMemberDetails(member) {
+    memberDetails.classList.add("visible");
+    detailsName.textContent = member.name || "Unnamed Member";
+    
+    // Construct breadcrumb trail
+    const pathParts = ["UMUOTUTO"];
+    if (member.rootName || member.rootCode) pathParts.push(member.rootName || member.rootCode);
+    if (member.familyName) pathParts.push(member.familyName);
+    if (member.surname) pathParts.push(member.surname);
+    if (member.father) pathParts.push(member.father);
+    if (member.name) pathParts.push(member.name);
+    
+    detailsBreadcrumb.textContent = pathParts.join(" ➔ ");
 
-/* ============================================================
-   MEMBER DETAILS
-============================================================ */
-
-function showMemberDetails(
-    member
-) {
-
-    memberDetails.classList.add(
-        "visible"
-    );
-
-
-    detailsName.textContent =
-        member.name ||
-        "Unnamed Member";
-
-
-    detailsId.textContent =
-        member.id ||
-        "Not available";
-
-
-    detailsRoot.textContent =
-        member.rootName ||
-        member.rootCode ||
-        "Not available";
-
-
-    detailsFamily.textContent =
-        member.familyName ||
-        "Not recorded";
-
-
-    detailsFather.textContent =
-        member.father ||
-        "Not recorded";
-
-
-    detailsMother.textContent =
-        member.mother ||
-        "Not recorded";
-
-
-    detailsDob.textContent =
-        member.dob ||
-        "Not recorded";
-
-
-    detailsBirthPlace.textContent =
-        member.birthPlace ||
-        "Not recorded";
-
+    detailsId.textContent = member.id || "Not available";
+    detailsRoot.textContent = member.rootName || member.rootCode || "Not available";
+    detailsFamily.textContent = member.familyName || "Not recorded";
+    detailsSurname.textContent = member.surname || "Not recorded";
+    detailsFather.textContent = member.father || "Not recorded";
+    detailsMother.textContent = member.mother || "Not recorded";
+    detailsDob.textContent = member.dob || "Not recorded";
+    detailsBirthPlace.textContent = member.birthPlace || "Not recorded";
 }
 
-
 /* ============================================================
-   FILTERING (CASE INSENSITIVE)
+   FILTERING
 ============================================================ */
 
 function getFilteredMembers() {
+    const selectedRoot = rootFilter.value.toUpperCase();
+    const searchValue = memberSearch.value.trim().toLowerCase();
 
-    const selectedRoot =
-        rootFilter.value.toUpperCase();
+    return ancestryMembers.filter(member => {
+        const matchesRoot = selectedRoot === "ALL" || (member.rootCode || "").toUpperCase() === selectedRoot;
+        const searchableText = [
+            member.name, member.surname, member.id, member.rootName,
+            member.rootCode, member.familyName, member.father, member.mother
+        ].join(" ").toLowerCase();
 
+        const matchesSearch = !searchValue || searchableText.includes(searchValue);
+        return matchesRoot && matchesSearch;
+    });
+}
 
-    const searchValue =
-        memberSearch.value
-            .trim()
-            .toLowerCase();
+/* ============================================================
+   MULTI-TIER HIERARCHY TREE BUILDER
+============================================================ */
 
+function buildFullHierarchy(filteredMembers) {
+    const hierarchy = [];
+    allNodeKeys = [];
 
-    return ancestryMembers.filter(
-        member => {
+    officialRootFamilies.forEach(rf => {
+        const rCode = rf.code.toUpperCase();
+        const rootMembers = filteredMembers.filter(m => (m.rootCode || '').toUpperCase() === rCode);
 
-            const matchesRoot =
-                selectedRoot === "ALL" ||
-                (member.rootCode || "").toUpperCase() ===
-                    selectedRoot;
+        const rootNode = {
+            idKey: `root_${rCode}`,
+            title: rf.name,
+            subtitle: "ROOT FAMILY",
+            code: rCode,
+            type: "root",
+            defaultHeight: 65,
+            children: []
+        };
+        allNodeKeys.push(rootNode.idKey);
 
+        const famMap = new Map();
+        rootMembers.forEach(m => {
+            const famName = (m.familyName && m.familyName.trim()) ? m.familyName.trim() : "Unspecified Family";
+            if (!famMap.has(famName)) famMap.set(famName, []);
+            famMap.get(famName).push(m);
+        });
 
-            const searchableText = [
+        famMap.forEach((famMembers, famName) => {
+            const famNode = {
+                idKey: `fam_${rCode}_${famName}`,
+                title: famName,
+                subtitle: "FAMILY",
+                type: "family_name",
+                rootCode: rCode,
+                defaultHeight: 60,
+                children: []
+            };
+            allNodeKeys.push(famNode.idKey);
 
-                member.name,
+            const surMap = new Map();
+            famMembers.forEach(m => {
+                const surname = (m.surname && m.surname.trim()) ? m.surname.trim() : "Unspecified Surname";
+                if (!surMap.has(surname)) surMap.set(surname, []);
+                surMap.get(surname).push(m);
+            });
 
-                member.id,
+            surMap.forEach((surMembers, surname) => {
+                const surNode = {
+                    idKey: `sur_${rCode}_${famName}_${surname}`,
+                    title: surname,
+                    subtitle: "SURNAME",
+                    type: "surname",
+                    rootCode: rCode,
+                    defaultHeight: 60,
+                    children: []
+                };
+                allNodeKeys.push(surNode.idKey);
 
-                member.rootName,
+                surNode.children = buildFatherChildNodes(surMembers, rCode, surNode.idKey);
 
-                member.rootCode,
+                if (surNode.children.length > 0) {
+                    famNode.children.push(surNode);
+                }
+            });
 
-                member.familyName,
+            if (famNode.children.length > 0) {
+                rootNode.children.push(famNode);
+            }
+        });
 
-                member.father,
+        hierarchy.push(rootNode);
+    });
 
-                member.mother
+    return hierarchy;
+}
 
-            ]
-                .join(" ")
-                .toLowerCase();
+function buildFatherChildNodes(members, rootCode, parentKey) {
+    const memberMap = new Map();
+    const memberByName = new Map();
 
+    members.forEach(m => {
+        const node = {
+            ...m,
+            idKey: `mem_${m.dbId || m.id || m.name}`,
+            title: m.name || "Unnamed",
+            subtitle: m.id ? `ID: ${m.id}` : "Registered Member",
+            type: "member",
+            rootCode: rootCode,
+            defaultHeight: 65,
+            isRegistered: true,
+            children: [],
+            parent: null
+        };
+        if (m.dbId) memberMap.set(String(m.dbId), node);
+        if (m.name) memberByName.set(m.name.trim().toLowerCase(), node);
+    });
 
-            const matchesSearch =
-                !searchValue ||
-                searchableText.includes(
-                    searchValue
-                );
+    const virtualFathers = new Map();
+    const topLevelNodes = [];
 
+    members.forEach(m => {
+        const node = memberMap.get(String(m.dbId));
+        if (!node) return;
 
-            return (
-                matchesRoot &&
-                matchesSearch
+        let parentNode = null;
+
+        if (m.immediateFatherId && memberMap.has(String(m.immediateFatherId))) {
+            parentNode = memberMap.get(String(m.immediateFatherId));
+        } else if (m.father && m.father.trim()) {
+            const fatherNameClean = m.father.trim().toLowerCase();
+            if (memberByName.has(fatherNameClean)) {
+                parentNode = memberByName.get(fatherNameClean);
+            } else {
+                const vKey = fatherNameClean;
+                if (!virtualFathers.has(vKey)) {
+                    const fatherKey = `vfat_${parentKey}_${vKey}`;
+                    virtualFathers.set(vKey, {
+                        idKey: fatherKey,
+                        title: m.father.trim(),
+                        subtitle: "FATHER",
+                        name: m.father.trim(),
+                        type: "father",
+                        rootCode: rootCode,
+                        defaultHeight: 60,
+                        isRegistered: false,
+                        children: [],
+                        parent: null
+                    });
+                    allNodeKeys.push(fatherKey);
+                }
+                parentNode = virtualFathers.get(vKey);
+            }
+        }
+
+        if (parentNode) {
+            parentNode.children.push(node);
+            node.parent = parentNode;
+        } else {
+            topLevelNodes.push(node);
+        }
+    });
+
+    virtualFathers.forEach(vNode => {
+        if (!vNode.parent) {
+            topLevelNodes.push(vNode);
+        }
+    });
+
+    return topLevelNodes;
+}
+
+/* ============================================================
+   RECURSIVE HEIGHT CALCULATION
+============================================================ */
+
+let maxLineageDepth = 1;
+
+function calculateTreeHeights(node, depth = 1) {
+    if (depth > maxLineageDepth) maxLineageDepth = depth;
+
+    const isCollapsed = collapsedNodes.has(node.idKey);
+
+    if (!node.children || node.children.length === 0 || isCollapsed) {
+        node.subtreeHeight = node.defaultHeight || 60;
+        return node.subtreeHeight;
+    }
+
+    let childrenTotalHeight = 0;
+    node.children.forEach((child, idx) => {
+        childrenTotalHeight += calculateTreeHeights(child, depth + 1);
+        if (idx > 0) childrenTotalHeight += NODE_GAP_Y;
+    });
+
+    node.subtreeHeight = Math.max(node.defaultHeight || 60, childrenTotalHeight);
+    return node.subtreeHeight;
+}
+
+/* ============================================================
+   RECURSIVE RENDERING OF LINEAGE
+============================================================ */
+
+function renderLineageNodes(node, startX, startY, rootColour, query) {
+    const nodeY = startY + (node.subtreeHeight - (node.defaultHeight || 60)) / 2;
+    const isCollapsed = collapsedNodes.has(node.idKey);
+    const hasChildren = node.children && node.children.length > 0;
+    const isSearchMatch = query && node.title.toLowerCase().includes(query);
+    const descCount = countBranchMembers(node);
+
+    const cardEl = drawNodeCard({
+        idKey: node.idKey,
+        x: startX,
+        y: nodeY,
+        width: MEMBER_W,
+        height: node.defaultHeight || 60,
+        title: node.title,
+        subtitle: node.subtitle,
+        type: node.type,
+        rootCode: node.rootCode,
+        member: node.isRegistered ? node : null,
+        descCount: node.type === "father" ? descCount : 0,
+        hasChildren: hasChildren,
+        isCollapsed: isCollapsed,
+        isSearchMatch: isSearchMatch
+    });
+
+    if (hasChildren && !isCollapsed) {
+        let childY = startY;
+        const nextX = startX + LEVEL_GAP_X;
+
+        node.children.forEach(child => {
+            const childCenterY = childY + child.subtreeHeight / 2;
+
+            addTreeBranch(
+                startX + MEMBER_W,
+                nodeY + (node.defaultHeight || 60) / 2,
+                nextX,
+                childCenterY,
+                rootColour,
+                3
             );
 
-        }
-    );
-
-}
-
-
-/* ============================================================
-   BUILD FAMILY STRUCTURE (CASE INSENSITIVE KEY MATCHING)
-============================================================ */
-
-function buildTreeStructure(filteredMembers) {
-
-    const roots = {};
-
-    officialRootFamilies.forEach(root => {
-
-        const normalizedCode =
-            (root.code || "").toUpperCase();
-
-        roots[normalizedCode] = {
-            code: root.code,
-            name: root.name,
-            families: {}
-        };
-
-    });
-
-    const memberMap = {};
-
-    ancestryMembers.forEach(member => {
-        if (member.dbId) {
-            memberMap[member.dbId] = member;
-        }
-    });
-
-    filteredMembers.forEach(member => {
-
-        const rootCode =
-            (member.rootCode || "").toUpperCase();
-
-        if (!roots[rootCode]) {
-            return;
-        }
-
-        const familyName =
-            (member.familyName || "Unspecified Family").trim();
-
-        if (!roots[rootCode].families[familyName]) {
-
-            roots[rootCode].families[familyName] = {
-                fathers: {}
-            };
-
-        }
-
-        let fatherKey;
-        let father;
-
-/*
- * REGISTERED FATHER
- */
-if (member.immediateFatherId) {
-
-    const registeredFather =
-        ancestryMembers.find(
-            fatherMember =>
-                String(fatherMember.dbId) ===
-                String(member.immediateFatherId)
-        );
-
-    if (registeredFather) {
-
-        fatherKey =
-            "registered:" +
-            member.immediateFatherId;
-
-        father =
-            registeredFather;
-
+            renderLineageNodes(child, nextX, childY, rootColour, query);
+            childY += child.subtreeHeight + NODE_GAP_Y;
+        });
     }
 
+    return cardEl;
 }
-
-/*
- * UNREGISTERED / MANUAL FATHER
- */
-if (!father) {
-
-    const manualFather =
-        (member.father || "").trim();
-
-    if (manualFather) {
-
-        fatherKey =
-            "manual:" +
-            manualFather.toLowerCase();
-
-        father = {
-            id: "",
-            name: manualFather,
-            registered: false
-        };
-
-    }
-
-}
-
-        
-
-        /*
-         * No father recorded
-         */
-        if (!fatherKey) {
-
-            fatherKey = "unknown";
-
-            father = {
-                id: "",
-                name: "Father not recorded",
-                registered: false
-            };
-
-        }
-
-        if (
-            !roots[rootCode]
-                .families[familyName]
-                .fathers[fatherKey]
-        ) {
-
-            roots[rootCode]
-                .families[familyName]
-                .fathers[fatherKey] = {
-
-                    father: father,
-                    children: []
-
-                };
-
-        }
-
-        roots[rootCode]
-            .families[familyName]
-            .fathers[fatherKey]
-            .children
-            .push(member);
-
-    });
-
-    return roots;
-}
-
 
 /* ============================================================
-   CALCULATE REQUIRED HEIGHTS (HORIZONTAL SPRAY)
-============================================================ */
-
-function calculateFatherHeight(fatherGroup) {
-
-    const count =
-        Math.max(
-            fatherGroup.children.length,
-            1
-        );
-
-    const requiredHeight =
-        count *
-        MEMBER_HEIGHT +
-        (count - 1) *
-        MEMBER_GAP;
-
-    return Math.max(
-        FATHER_HEIGHT,
-        requiredHeight + 20
-    );
-
-}
-
-
-function calculateFamilyHeight(family) {
-
-    const fatherKeys =
-        Object.keys(
-            family.fathers
-        );
-
-    if (
-        fatherKeys.length === 0
-    ) {
-
-        return FAMILY_HEIGHT + 40;
-
-    }
-
-    let height = 0;
-
-    fatherKeys.forEach(
-        fatherKey => {
-
-            height +=
-                calculateFatherHeight(
-                    family.fathers[fatherKey]
-                ) +
-                FAMILY_GAP;
-
-        }
-    );
-
-    return Math.max(
-        FAMILY_HEIGHT + 40,
-        height - FAMILY_GAP
-    );
-
-}
-
-
-function calculateRootHeight(root) {
-
-    const familyNames =
-        Object.keys(
-            root.families
-        );
-
-    if (
-        familyNames.length === 0
-    ) {
-
-        return ROOT_HEIGHT + 40;
-
-    }
-
-    let height = 0;
-
-    familyNames.forEach(
-        familyName => {
-
-            height +=
-                calculateFamilyHeight(
-                    root.families[familyName]
-                ) +
-                FAMILY_GAP;
-
-        }
-    );
-
-    return Math.max(
-        ROOT_HEIGHT + 40,
-        height - FAMILY_GAP
-    );
-
-}
-
-
-/* ============================================================
-   AUTO FIT MAP SCALE TO SCREEN
-============================================================ */
-
-function autoFitMap(
-    totalWidth,
-    totalHeight
-) {
-
-    if (!mapScrollContainer) return;
-
-    const containerWidth =
-        mapScrollContainer.clientWidth || 950;
-
-    const containerHeight =
-        mapScrollContainer.clientHeight || 620;
-
-
-    const scaleX =
-        containerWidth / totalWidth;
-
-    const scaleY =
-        containerHeight / totalHeight;
-
-
-    currentScale =
-        Math.min(scaleX, scaleY);
-
-
-    currentScale =
-        Math.min(
-            Math.max(currentScale, 0.2),
-            1.2
-        );
-
-
-    applyScale();
-
-}
-
-
-/* ============================================================
-   RENDER TREE (LEFT TO RIGHT)
+   RENDER FULL MAP
 ============================================================ */
 
 function renderMap() {
-
     clearMap();
+    maxLineageDepth = 1;
 
-    const filteredMembers =
-        getFilteredMembers();
+    const query = memberSearch.value.trim().toLowerCase();
+    const filteredMembers = getFilteredMembers();
+    memberCount.textContent = ancestryMembers.length;
+    displayedCount.textContent = filteredMembers.length;
 
-    memberCount.textContent =
-        ancestryMembers.length;
-
-    displayedCount.textContent =
-        filteredMembers.length;
-
-    if (
-        rootFilter.value.toUpperCase() === "ALL" &&
-        !memberSearch.value.trim()
-    ) {
-
-        mapStatus.textContent =
-            "Showing all recorded members";
-
+    if (rootFilter.value.toUpperCase() === "ALL" && !query) {
+        mapStatus.textContent = "Showing all recorded members";
     } else {
-
-        mapStatus.textContent =
-            `Showing ${filteredMembers.length} matching member(s)`;
-
+        mapStatus.textContent = `Showing ${filteredMembers.length} matching member(s)`;
     }
 
-    const tree =
-        buildTreeStructure(
-            filteredMembers
-        );
+    const hierarchy = buildFullHierarchy(filteredMembers);
 
-    const rootKeys =
-        officialRootFamilies
-            .map(
-                root =>
-                    (root.code || "").toUpperCase()
-            )
-            .filter(
-                rootCode =>
-                    tree[rootCode]
-            );
-
-    const rootHeights =
-        rootKeys.map(
-            rootCode =>
-                calculateRootHeight(
-                    tree[rootCode]
-                )
-        );
-
-    const totalRootHeight =
-        rootHeights.reduce(
-            (sum, height) =>
-                sum + height,
-            0
-        );
-
-    const totalContentHeight =
-        totalRootHeight +
-        Math.max(
-            0,
-            rootKeys.length - 1
-        ) *
-        ROOT_GAP;
-
-    const totalHeight =
-        Math.max(
-            650,
-            totalContentHeight + 100
-        );
-
-    const totalWidth =
-        1470;
-
-    const centerY =
-        totalHeight / 2;
-
-
-    /*
-     * FOUNDATION
-     */
-    addNode({
-
-        x:
-            FOUNDATION_X,
-
-        y:
-            centerY -
-            FOUNDATION_HEIGHT / 2,
-
-        width:
-            FOUNDATION_WIDTH,
-
-        height:
-            FOUNDATION_HEIGHT,
-
-        title:
-            "UMUOTUTO",
-
-        subtitle:
-            "CLAN FOUNDATION",
-
-        type:
-            "foundation",
-
-        colour:
-            "#4B1F7A",
-
-        textColour:
-            "#FFFFFF"
-
+    let totalHierarchyHeight = 0;
+    hierarchy.forEach((rootNode, idx) => {
+        const h = calculateTreeHeights(rootNode, 1);
+        totalHierarchyHeight += h;
+        if (idx > 0) totalHierarchyHeight += 40;
     });
 
-
-    let currentY =
-        (
-            totalHeight -
-            totalContentHeight
-        ) / 2;
-
-
-    /*
-     * ROOT FAMILIES
-     */
-    rootKeys.forEach(
-        (
-            rootCode,
-            rootIndex
-        ) => {
-
-            const root =
-                tree[rootCode];
-
-            const rootHeight =
-                rootHeights[
-                    rootIndex
-                ];
-
-            const rootCenterY =
-                currentY +
-                rootHeight / 2;
-
-            const rootColour =
-                ROOT_COLOURS[
-                    rootCode
-                ] ||
-                "#AC5D1A";
-
-
-            /*
-             * FOUNDATION → ROOT
-             */
-            addTreeBranch(
-
-                FOUNDATION_X +
-                    FOUNDATION_WIDTH,
-
-                centerY,
-
-                ROOT_X,
-
-                rootCenterY,
-
-                rootColour,
-
-                8
-
-            );
-
-
-            /*
-             * ROOT NODE
-             */
-            addNode({
-
-                x:
-                    ROOT_X,
-
-                y:
-                    rootCenterY -
-                    ROOT_HEIGHT / 2,
-
-                width:
-                    ROOT_WIDTH,
-
-                height:
-                    ROOT_HEIGHT,
-
-                title:
-                    root.name,
-
-                subtitle:
-                    "ROOT FAMILY",
-
-                type:
-                    "root",
-
-                colour:
-                    rootColour,
-
-                textColour:
-                    "#FFFFFF"
-
-            });
-
-
-            const familyNames =
-                Object.keys(
-                    root.families
-                );
-
-            let familyCurrentY =
-                currentY;
-
-
-            /*
-             * FAMILY NAMES
-             */
-            familyNames.forEach(
-                familyName => {
-
-                    const family =
-                        root.families[
-                            familyName
-                        ];
-
-                    const familyHeight =
-                        calculateFamilyHeight(
-                            family
-                        );
-
-                    const familyCenterY =
-                        familyCurrentY +
-                        familyHeight / 2;
-
-
-                    /*
-                     * ROOT → FAMILY
-                     */
-                    addTreeBranch(
-
-                        ROOT_X +
-                            ROOT_WIDTH,
-
-                        rootCenterY,
-
-                        FAMILY_X,
-
-                        familyCenterY,
-
-                        "#8C6B35",
-
-                        4
-
-                    );
-
-
-                    /*
-                     * FAMILY NODE
-                     */
-                    addNode({
-
-                        x:
-                            FAMILY_X,
-
-                        y:
-                            familyCenterY -
-                            FAMILY_HEIGHT / 2,
-
-                        width:
-                            FAMILY_WIDTH,
-
-                        height:
-                            FAMILY_HEIGHT,
-
-                        title:
-                            familyName,
-
-                        subtitle:
-                            "FAMILY",
-
-                        type:
-                            "family",
-
-                        colour:
-                            "#8C6B35",
-
-                        textColour:
-                            "#FFFFFF"
-
-                    });
-
-
-                    const fatherKeys =
-                        Object.keys(
-                            family.fathers
-                        );
-
-                    let fatherCurrentY =
-                        familyCurrentY;
-
-
-                    /*
-                     * FATHERS
-                     */
-                    fatherKeys.forEach(
-                        fatherKey => {
-
-                            const fatherGroup =
-                                family.fathers[
-                                    fatherKey
-                                ];
-
-                            const fatherHeight =
-                                calculateFatherHeight(
-                                    fatherGroup
-                                );
-
-                            const fatherCenterY =
-                                fatherCurrentY +
-                                fatherHeight / 2;
-
-
-                            /*
-                             * FAMILY → FATHER
-                             */
-                            addTreeBranch(
-
-                                FAMILY_X +
-                                    FAMILY_WIDTH,
-
-                                familyCenterY,
-
-                                FATHER_X,
-
-                                fatherCenterY,
-
-                                "#8C6B35",
-
-                                3
-
-                            );
-
-
-                            const fatherMember =
-                                fatherGroup.father;
-
-
-                            /*
-                             * FATHER NODE
-                             */
-                            if (
-                                fatherMember &&
-                                fatherMember.id
-                            ) {
-
-                                addNode({
-
-                                    x:
-                                        FATHER_X,
-
-                                    y:
-                                        fatherCenterY -
-                                        FATHER_HEIGHT / 2,
-
-                                    width:
-                                        FATHER_WIDTH,
-
-                                    height:
-                                        FATHER_HEIGHT,
-
-                                    title:
-                                        fatherMember.name ||
-                                        "Unnamed Member",
-
-                                    subtitle:
-                                        fatherMember.id ||
-                                        "No ID",
-
-                                    type:
-                                        "member",
-
-                                    colour:
-                                        "#EADFF0",
-
-                                    textColour:
-                                        "#351354",
-
-                                    member:
-                                        fatherMember
-
-                                });
-
-                            } else {
-
-                                addNode({
-
-                                    x:
-                                        FATHER_X,
-
-                                    y:
-                                        fatherCenterY -
-                                        FATHER_HEIGHT / 2,
-
-                                    width:
-                                        FATHER_WIDTH,
-
-                                    height:
-                                        FATHER_HEIGHT,
-
-                                    title:
-                                        fatherMember.name ||
-                                        "Father not recorded",
-
-                                    subtitle:
-                                        "UNREGISTERED FATHER",
-
-                                    type:
-                                        "father",
-
-                                    colour:
-                                        "#D8C7A0",
-
-                                    textColour:
-                                        "#351354"
-
-                                });
-
-                            }
-
-
-                            /*
-                             * FATHER → CHILDREN
-                             */
-                            const children =
-                                fatherGroup.children;
-
-                            const childrenTotalHeight =
-                                children.length *
-                                MEMBER_HEIGHT +
-                                (
-                                    children.length - 1
-                                ) *
-                                MEMBER_GAP;
-
-                            let childStartY =
-                                fatherCenterY -
-                                childrenTotalHeight / 2;
-
-
-                            children.forEach(
-                                child => {
-
-                                    const childCenterY =
-                                        childStartY +
-                                        MEMBER_HEIGHT / 2;
-
-
-                                    addTreeBranch(
-
-                                        FATHER_X +
-                                            FATHER_WIDTH,
-
-                                        fatherCenterY,
-
-                                        MEMBER_X,
-
-                                        childCenterY,
-
-                                        "#8C6B35",
-
-                                        3
-
-                                    );
-
-
-                                    addNode({
-
-                                        x:
-                                            MEMBER_X,
-
-                                        y:
-                                            childStartY,
-
-                                        width:
-                                            MEMBER_WIDTH,
-
-                                        height:
-                                            MEMBER_HEIGHT,
-
-                                        title:
-                                            child.name ||
-                                            "Unnamed Member",
-
-                                        subtitle:
-                                            child.id ||
-                                            "No ID",
-
-                                        type:
-                                            "member",
-
-                                        colour:
-                                            "#EADFF0",
-
-                                        textColour:
-                                            "#351354",
-
-                                        member:
-                                            child
-
-                                    });
-
-
-                                    childStartY +=
-                                        MEMBER_HEIGHT +
-                                        MEMBER_GAP;
-
+    const totalHeight = Math.max(650, totalHierarchyHeight + 100);
+    const totalWidth = Math.max(1600, LINEAGE_START_X + (maxLineageDepth - 1) * LEVEL_GAP_X + 150);
+
+    const centerY = totalHeight / 2;
+
+    /* 1. FOUNDATION NODE */
+    drawNodeCard({
+        x: FOUNDATION_X,
+        y: centerY - 38,
+        width: FOUNDATION_W,
+        height: 75,
+        title: "UMUOTUTO",
+        subtitle: "CLAN FOUNDATION",
+        descCount: filteredMembers.length,
+        type: "foundation"
+    });
+
+    let currentY = (totalHeight - totalHierarchyHeight) / 2;
+    let matchElement = null;
+
+    /* 2. ROOT FAMILIES & CHILD TIERS */
+    hierarchy.forEach(rootNode => {
+        const rootColour = ROOT_COLOURS[rootNode.code] || "#AC5D1A";
+        const rootCenterY = currentY + rootNode.subtreeHeight / 2;
+        const isRootCollapsed = collapsedNodes.has(rootNode.idKey);
+        const rootMembersCount = countBranchMembers(rootNode);
+
+        addTreeBranch(FOUNDATION_X + FOUNDATION_W, centerY, ROOT_X, rootCenterY, rootColour, 6);
+
+        drawNodeCard({
+            idKey: rootNode.idKey,
+            x: ROOT_X,
+            y: rootCenterY - 32,
+            width: ROOT_W,
+            height: 65,
+            title: rootNode.title,
+            subtitle: rootNode.subtitle,
+            type: "root",
+            rootCode: rootNode.code,
+            descCount: rootMembersCount,
+            hasChildren: rootNode.children.length > 0,
+            isCollapsed: isRootCollapsed
+        });
+
+        if (!isRootCollapsed) {
+            let famY = currentY;
+            rootNode.children.forEach(famNode => {
+                const famCenterY = famY + famNode.subtreeHeight / 2;
+                const isFamCollapsed = collapsedNodes.has(famNode.idKey);
+                const famMembersCount = countBranchMembers(famNode);
+
+                addTreeBranch(ROOT_X + ROOT_W, rootCenterY, FAM_X, famCenterY, rootColour, 4);
+
+                drawNodeCard({
+                    idKey: famNode.idKey,
+                    x: FAM_X,
+                    y: famCenterY - 30,
+                    width: FAM_W,
+                    height: 60,
+                    title: famNode.title,
+                    subtitle: famNode.subtitle,
+                    type: "family_name",
+                    descCount: famMembersCount,
+                    hasChildren: famNode.children.length > 0,
+                    isCollapsed: isFamCollapsed
+                });
+
+                if (!isFamCollapsed) {
+                    let surY = famY;
+                    famNode.children.forEach(surNode => {
+                        const surCenterY = surY + surNode.subtreeHeight / 2;
+                        const isSurCollapsed = collapsedNodes.has(surNode.idKey);
+                        const surMembersCount = countBranchMembers(surNode);
+
+                        addTreeBranch(FAM_X + FAM_W, famCenterY, SUR_X, surCenterY, rootColour, 3);
+
+                        drawNodeCard({
+                            idKey: surNode.idKey,
+                            x: SUR_X,
+                            y: surCenterY - 30,
+                            width: SUR_W,
+                            height: 60,
+                            title: surNode.title,
+                            subtitle: surNode.subtitle,
+                            type: "surname",
+                            descCount: surMembersCount,
+                            hasChildren: surNode.children.length > 0,
+                            isCollapsed: isSurCollapsed
+                        });
+
+                        if (!isSurCollapsed) {
+                            let lineageY = surY;
+                            surNode.children.forEach(linNode => {
+                                const linCenterY = lineageY + linNode.subtreeHeight / 2;
+
+                                addTreeBranch(SUR_X + SUR_W, surCenterY, LINEAGE_START_X, linCenterY, rootColour, 3);
+
+                                const renderedEl = renderLineageNodes(linNode, LINEAGE_START_X, lineageY, rootColour, query);
+                                if (!matchElement && query && linNode.title.toLowerCase().includes(query)) {
+                                    matchElement = renderedEl;
                                 }
-                            );
 
-
-                            fatherCurrentY +=
-                                fatherHeight +
-                                FAMILY_GAP;
-
+                                lineageY += linNode.subtreeHeight + NODE_GAP_Y;
+                            });
                         }
-                    );
 
-
-                    familyCurrentY +=
-                        familyHeight +
-                        FAMILY_GAP;
-
+                        surY += surNode.subtreeHeight + NODE_GAP_Y;
+                    });
                 }
-            );
 
-
-            currentY +=
-                rootHeight +
-                ROOT_GAP;
-
+                famY += famNode.subtreeHeight + NODE_GAP_Y;
+            });
         }
-    );
 
+        currentY += rootNode.subtreeHeight + 40;
+    });
 
-    svg.setAttribute(
-        "viewBox",
-        `0 0 ${totalWidth} ${totalHeight}`
-    );
+    svg.setAttribute("viewBox", `0 0 ${totalWidth} ${totalHeight}`);
+    svg.style.width = totalWidth + "px";
+    svg.style.minWidth = totalWidth + "px";
+    svg.style.height = totalHeight + "px";
 
-    svg.style.width =
-        totalWidth + "px";
-
-    svg.style.minWidth =
-        totalWidth + "px";
-
-    svg.style.height =
-        totalHeight + "px";
-
-    autoFitMap(
-        totalWidth,
-        totalHeight
-    );
-
+    if (matchElement && query) {
+        centerNodeInView(matchElement);
+    }
 }
 
-
-
 /* ============================================================
-   ZOOM
+   SEARCH AUTO-FOCUS & CENTERING
 ============================================================ */
 
-function applyScale() {
+function centerNodeInView(nodeElement) {
+    if (!nodeElement || !mapScrollContainer) return;
+    const nx = parseFloat(nodeElement.getAttribute("data-x")) || 0;
+    const ny = parseFloat(nodeElement.getAttribute("data-y")) || 0;
 
-    svg.style.transform =
-        `scale(${currentScale})`;
+    const targetX = (nx * currentScale) - (mapScrollContainer.clientWidth / 2) + 90;
+    const targetY = (ny * currentScale) - (mapScrollContainer.clientHeight / 2) + 30;
 
-    svg.style.transformOrigin =
-        "top left";
-
+    mapScrollContainer.scrollTo({
+        left: Math.max(0, targetX),
+        top: Math.max(0, targetY),
+        behavior: 'smooth'
+    });
 }
 
-
 /* ============================================================
-   BUTTONS
+   SMOOTH 360° MOUSE & TOUCH CANVAS PANNING
 ============================================================ */
 
-document
-    .getElementById("zoomIn")
-    .addEventListener(
-        "click",
-        () => {
-
-            currentScale =
-                Math.min(
-                    currentScale + 0.1,
-                    2.5
-                );
-
-            applyScale();
-
-        }
-    );
-
-
-document
-    .getElementById("zoomOut")
-    .addEventListener(
-        "click",
-        () => {
-
-            currentScale =
-                Math.max(
-                    currentScale - 0.1,
-                    0.15
-                );
-
-            applyScale();
-
-        }
-    );
-
-
-document
-    .getElementById("resetMap")
-    .addEventListener(
-        "click",
-        () => {
-
-            rootFilter.value =
-                "ALL";
-
-            memberSearch.value =
-                "";
-
-            memberDetails.classList.remove(
-                "visible"
-            );
-
-            renderMap();
-
-        }
-    );
-
-
-/* ============================================================
-   FILTER EVENTS
-============================================================ */
-
-rootFilter.addEventListener(
-    "change",
-    renderMap
-);
-
-
-memberSearch.addEventListener(
-    "input",
-    renderMap
-);
-
-
-/* ============================================================
-   LAPTOP TRACKPAD PINCH ZOOM
-============================================================ */
+let isDragging = false;
+let startX, startY, scrollLeft, scrollTop;
 
 if (mapScrollContainer) {
+    mapScrollContainer.addEventListener("mousedown", (e) => {
+        if (e.target.closest(".tree-node")) return;
+        isDragging = true;
+        mapScrollContainer.style.cursor = "grabbing";
+        startX = e.pageX - mapScrollContainer.offsetLeft;
+        startY = e.pageY - mapScrollContainer.offsetTop;
+        scrollLeft = mapScrollContainer.scrollLeft;
+        scrollTop = mapScrollContainer.scrollTop;
+    });
 
-    mapScrollContainer.addEventListener(
-        "wheel",
-        event => {
-
-            if (event.ctrlKey) {
-
-                event.preventDefault();
-
-
-                const zoomFactor =
-                    event.deltaY < 0 ? 1.05 : 0.95;
-
-
-                currentScale =
-                    Math.min(
-                        Math.max(
-                            currentScale * zoomFactor,
-                            0.15
-                        ),
-                        2.5
-                    );
-
-
-                applyScale();
-
-            }
-
-        },
-        {
-            passive: false
+    window.addEventListener("mouseup", () => {
+        if (isDragging) {
+            isDragging = false;
+            if (mapScrollContainer) mapScrollContainer.style.cursor = "grab";
         }
-    );
+    });
 
+    mapScrollContainer.addEventListener("mousemove", (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const x = e.pageX - mapScrollContainer.offsetLeft;
+        const y = e.pageY - mapScrollContainer.offsetTop;
+        const walkX = (x - startX) * 1.3;
+        const walkY = (y - startY) * 1.3;
+        mapScrollContainer.scrollLeft = scrollLeft - walkX;
+        mapScrollContainer.scrollTop = scrollTop - walkY;
+    });
 }
 
-
 /* ============================================================
-   MOBILE & TABLET TOUCH PINCH ZOOM
+   ZOOM & EXPORT CONTROLS
 ============================================================ */
 
-let pinchStartDistance = null;
+function autoFitMap() {
+    if (!mapScrollContainer || !svg) return;
+    const containerW = mapScrollContainer.clientWidth || 1000;
+    const totalWidth = parseFloat(svg.getAttribute("viewBox")?.split(" ")[2]) || 1600;
 
-let pinchStartScale = 1;
-
-
-function getTouchDistance(
-    touch1,
-    touch2
-) {
-
-    const dx =
-        touch2.clientX -
-        touch1.clientX;
-
-    const dy =
-        touch2.clientY -
-        touch1.clientY;
-
-
-    return Math.sqrt(
-        dx * dx +
-        dy * dy
-    );
-
+    currentScale = Math.min(Math.max(containerW / totalWidth, 0.35), 1.0);
+    applyScale();
+    mapScrollContainer.scrollTo({ left: 0, top: 0, behavior: 'smooth' });
 }
 
+function applyScale() {
+    svg.style.transform = `scale(${currentScale})`;
+    svg.style.transformOrigin = "top left";
+}
 
-svg.addEventListener(
-    "touchstart",
-    event => {
+document.getElementById("zoomIn").addEventListener("click", () => {
+    currentScale = Math.min(currentScale + 0.1, 2.5);
+    applyScale();
+});
 
-        if (
-            event.touches.length === 2
-        ) {
+document.getElementById("zoomOut").addEventListener("click", () => {
+    currentScale = Math.max(currentScale - 0.1, 0.15);
+    applyScale();
+});
 
-            pinchStartDistance =
-                getTouchDistance(
-                    event.touches[0],
-                    event.touches[1]
-                );
+document.getElementById("resetMap").addEventListener("click", () => {
+    autoFitMap();
+});
 
+/* EXPAND / COLLAPSE ALL */
+document.getElementById("expandAllBtn").addEventListener("click", () => {
+    collapsedNodes.clear();
+    renderMap();
+});
 
-            pinchStartScale =
-                currentScale;
+document.getElementById("collapseAllBtn").addEventListener("click", () => {
+    allNodeKeys.forEach(k => collapsedNodes.add(k));
+    renderMap();
+});
 
+/* EXPORT SVG */
+document.getElementById("exportSvg").addEventListener("click", () => {
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+    const svgUrl = URL.createObjectURL(svgBlob);
+    const downloadLink = document.createElement("a");
+    downloadLink.href = svgUrl;
+    downloadLink.download = "UMUOTUTO_Ancestry_Map.svg";
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+});
+
+/* DEBOUNCED SEARCH INPUT */
+let searchTimeout = null;
+memberSearch.addEventListener("input", () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        renderMap();
+    }, 250);
+});
+
+rootFilter.addEventListener("change", renderMap);
+
+/* TRACKPAD & PINCH ZOOM */
+if (mapScrollContainer) {
+    mapScrollContainer.addEventListener("wheel", event => {
+        if (event.ctrlKey) {
+            event.preventDefault();
+            const zoomFactor = event.deltaY < 0 ? 1.05 : 0.95;
+            currentScale = Math.min(Math.max(currentScale * zoomFactor, 0.15), 2.5);
+            applyScale();
         }
+    }, { passive: false });
+}
 
-    },
-    {
-        passive: false
-    }
-);
-
-
-svg.addEventListener(
-    "touchmove",
-    event => {
-
-        if (
-            event.touches.length !== 2 ||
-            pinchStartDistance === null
-        ) {
-
-            return;
-
-        }
-
-
-        event.preventDefault();
-
-
-        const currentDistance =
-            getTouchDistance(
-                event.touches[0],
-                event.touches[1]
-            );
-
-
-        if (
-            currentDistance <= 0
-        ) {
-
-            return;
-
-        }
-
-
-        const scaleRatio =
-            currentDistance /
-            pinchStartDistance;
-
-
-        currentScale =
-            Math.min(
-                Math.max(
-                    pinchStartScale *
-                    scaleRatio,
-                    0.15
-                ),
-                2.5
-            );
-
-
-        applyScale();
-
-    },
-    {
-        passive: false
-    }
-);
-
-
-svg.addEventListener(
-    "touchend",
-    event => {
-
-        if (
-            event.touches.length < 2
-        ) {
-
-            pinchStartDistance =
-                null;
-
-        }
-
-    },
-    {
-        passive: false
-    }
-);
-
-
-svg.addEventListener(
-    "touchcancel",
-    () => {
-
-        pinchStartDistance =
-            null;
-
-    },
-    {
-        passive: false
-    }
-);
-
-
-/* ============================================================
-   INITIAL RENDER
-============================================================ */
-
+/* INITIAL RENDER */
 renderMap();
+autoFitMap();
 
 </script>
 

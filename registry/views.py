@@ -64,6 +64,10 @@ def dashboard(request):
         event_type="DIVORCE"
     ).count()
 
+    total_name_changes = LifeEvent.objects.filter(
+        event_type__icontains="NAME"
+    ).count()
+
     total_deaths = LifeEvent.objects.filter(
         event_type="DEATH"
     ).count()
@@ -107,6 +111,7 @@ def dashboard(request):
         "total_events": total_events,
         "total_marriages": total_marriages,
         "total_divorces": total_divorces,
+        "total_name_changes": total_name_changes,
         "total_deaths": total_deaths,
         "family_root_counts": family_root_counts,
         "recent_members": recent_members,
@@ -818,19 +823,40 @@ def new_life_event(request):
 
                     name_change.life_event = life_event
 
-                    name_change.previous_name = (
-                        name_change_form.cleaned_data.get(
-                            "previous_name"
-                        )
+                    previous_name = (
+                        name_change_form.cleaned_data.get("previous_name")
+                        or name_change_form.cleaned_data.get("old_name")
                     )
 
-                    name_change.current_name = (
-                        name_change_form.cleaned_data.get(
-                            "current_name"
-                        )
+                    current_name = (
+                        name_change_form.cleaned_data.get("current_name")
+                        or name_change_form.cleaned_data.get("new_name")
                     )
+
+                    name_change.previous_name = previous_name
+                    name_change.current_name = current_name
+
+                    if hasattr(name_change, "old_name"):
+                        name_change.old_name = previous_name
+
+                    if hasattr(name_change, "new_name"):
+                        name_change.new_name = current_name
 
                     name_change.save()
+
+                    # Optionally update the registry member's fields if submitted
+                    new_surname = name_change_form.cleaned_data.get("new_surname")
+                    new_firstname = name_change_form.cleaned_data.get("new_firstname")
+                    new_middlename = name_change_form.cleaned_data.get("new_middlename")
+
+                    if new_surname or new_firstname:
+                        if new_surname:
+                            selected_member.surname = new_surname
+                        if new_firstname:
+                            selected_member.firstname = new_firstname
+                        if new_middlename is not None:
+                            selected_member.middlename = new_middlename
+                        selected_member.save()
 
                 # --------------------------------------------
                 # SUCCESS

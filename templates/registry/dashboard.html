@@ -175,6 +175,54 @@
     }
 
     /* =========================================================
+       ONE-LINE COMPRESSED STATS ROW
+    ========================================================= */
+
+    .dashboard-stats {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 12px;
+        margin: 24px 0;
+    }
+
+    .dashboard-stat-card {
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .dashboard-stat-card strong {
+        font-size: 18px;
+        line-height: 1.2;
+    }
+
+    .dashboard-stat-card span {
+        font-size: 11px;
+        white-space: nowrap;
+    }
+
+    .dashboard-stat-card small {
+        font-size: 10px;
+        white-space: nowrap;
+    }
+
+    .dashboard-stat-icon.name-change {
+        background: rgba(217, 119, 6, 0.15);
+        color: #d97706;
+    }
+
+    .event-summary-dot.name-change {
+        background: #d97706;
+    }
+
+    @media (max-width: 1100px) {
+        .dashboard-stats {
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        }
+    }
+
+    /* =========================================================
        EXPANDED STORY MODAL
     ========================================================= */
 
@@ -384,7 +432,7 @@
 
 
     <!-- =========================================
-         MAIN STATISTICS (SUMMARY CARDS)
+         MAIN STATISTICS (SUMMARY CARDS - 1 LINE)
          ========================================= -->
 
     <div class="dashboard-stats">
@@ -403,7 +451,7 @@
                 </strong>
 
                 <small>
-                    Registered clan members
+                    Registered members
                 </small>
             </div>
 
@@ -446,6 +494,27 @@
 
                 <small>
                     Marriage records
+                </small>
+            </div>
+
+        </div>
+
+
+        <div class="dashboard-stat-card">
+
+            <div class="dashboard-stat-icon name-change">
+                ✎
+            </div>
+
+            <div>
+                <span>Name Changes</span>
+
+                <strong>
+                    {{ total_name_changes|default:"0" }}
+                </strong>
+
+                <small>
+                    Name change records
                 </small>
             </div>
 
@@ -592,6 +661,20 @@
 
                     <strong>
                         {{ total_divorces|default:"0" }}
+                    </strong>
+
+                </div>
+
+
+                <div class="event-summary-row">
+
+                    <span class="event-summary-label">
+                        <i class="event-summary-dot name-change"></i>
+                        Name Change
+                    </span>
+
+                    <strong>
+                        {{ total_name_changes|default:"0" }}
                     </strong>
 
                 </div>
@@ -747,10 +830,12 @@
                     <div class="recent-item">
 
                         <div class="recent-avatar event-avatar">
-                            {% if event.event_type == "MARRIAGE" %}
+                            {% if event.event_type == "MARRIAGE" or event.event_type == "MARRIAGE_EVENT" %}
                                 ♡
                             {% elif event.event_type == "DIVORCE" %}
                                 /
+                            {% elif event.event_type == "NAME_CHANGE" or event.event_type == "NAME CHANGE" or "NAME" in event.event_type %}
+                                ✎
                             {% else %}
                                 †
                             {% endif %}

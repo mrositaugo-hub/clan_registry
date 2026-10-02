@@ -1,4 +1,3 @@
-```html
 {% extends "registry/base.html" %}
 
 {% block title %}
@@ -150,7 +149,7 @@ Life Event Details
                 </label>
 
                 <div class="readonly-value">
-                    {{ life_event.get_event_type_display }}
+                    {{ life_event.get_event_type_display|default:life_event.event_type }}
                 </div>
 
             </div>
@@ -171,29 +170,161 @@ Life Event Details
 
             {% if life_event.event_type != "DIVORCE" %}
 
-    <div class="form-group">
+                <div class="form-group">
 
-        <label>
-            Event Location
-        </label>
+                    <label>
+                        Event Location
+                    </label>
 
-        <div class="readonly-value">
+                    <div class="readonly-value">
 
-            {% if life_event.event_location %}
-                {{ life_event.event_location }}
-            {% else %}
-                Not provided
+                        {% if life_event.event_location %}
+                            {{ life_event.event_location }}
+                        {% else %}
+                            Not provided
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
             {% endif %}
 
         </div>
 
     </div>
 
-{% endif %}
+
+    <!-- ==============================================
+         NAME CHANGE DETAILS
+    =============================================== -->
+
+    {% if life_event.event_type == "NAME_CHANGE" or life_event.event_type == "NAME CHANGE" or life_event.name_change_details or life_event.namechangedetails or life_event.name_change %}
+
+        <div class="form-card">
+
+            <div class="form-card-header">
+
+                <div>
+
+                    <span class="step-number">
+                        03
+                    </span>
+
+                    <div class="step-heading">
+
+                        <h2>
+                            Name Change Information
+                        </h2>
+
+                        <p>
+                            Historical details regarding the member's name change.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="form-grid">
+
+                <div class="form-group">
+
+                    <label>
+                        Previous / Former Name
+                    </label>
+
+                    <div class="readonly-value">
+
+                        {% if life_event.name_change_details.previous_name %}
+                            {{ life_event.name_change_details.previous_name }}
+                        {% elif life_event.namechangedetails.previous_name %}
+                            {{ life_event.namechangedetails.previous_name }}
+                        {% elif life_event.name_change.previous_name %}
+                            {{ life_event.name_change.previous_name }}
+                        {% elif life_event.name_change_details.old_name %}
+                            {{ life_event.name_change_details.old_name }}
+                        {% elif life_event.namechangedetails.old_name %}
+                            {{ life_event.namechangedetails.old_name }}
+                        {% elif life_event.previous_name %}
+                            {{ life_event.previous_name }}
+                        {% elif life_event.old_name %}
+                            {{ life_event.old_name }}
+                        {% else %}
+                            Not provided
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        New Name
+                    </label>
+
+                    <div class="readonly-value">
+
+                        {% if life_event.name_change_details.current_name %}
+                            {{ life_event.name_change_details.current_name }}
+                        {% elif life_event.namechangedetails.current_name %}
+                            {{ life_event.namechangedetails.current_name }}
+                        {% elif life_event.name_change.current_name %}
+                            {{ life_event.name_change.current_name }}
+                        {% elif life_event.name_change_details.new_name %}
+                            {{ life_event.name_change_details.new_name }}
+                        {% elif life_event.namechangedetails.new_name %}
+                            {{ life_event.namechangedetails.new_name }}
+                        {% elif life_event.current_name %}
+                            {{ life_event.current_name }}
+                        {% elif life_event.new_name %}
+                            {{ life_event.new_name }}
+                        {% elif member %}
+                            {{ member.surname }} {{ member.firstname }} {% if member.middlename %}{{ member.middlename }}{% endif %}
+                        {% else %}
+                            Not provided
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                {% if life_event.name_change_details.reason or life_event.namechangedetails.reason or life_event.reason_for_change or life_event.reason %}
+
+                    <div class="form-group form-group-full">
+
+                        <label>
+                            Reason for Name Change
+                        </label>
+
+                        <div class="readonly-value">
+
+                            {% if life_event.name_change_details.reason %}
+                                {{ life_event.name_change_details.reason }}
+                            {% elif life_event.namechangedetails.reason %}
+                                {{ life_event.namechangedetails.reason }}
+                            {% elif life_event.reason_for_change %}
+                                {{ life_event.reason_for_change }}
+                            {% elif life_event.reason %}
+                                {{ life_event.reason }}
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                {% endif %}
+
+            </div>
 
         </div>
 
-    </div>
+    {% endif %}
 
 
     <!-- ==============================================
@@ -464,4 +595,3 @@ Life Event Details
 </div>
 
 {% endblock %}
-```
