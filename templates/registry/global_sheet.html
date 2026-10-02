@@ -10,6 +10,311 @@ GLOBAL SHEET
 
 {% block content %}
 
+<style>
+/* ==========================================================================
+   MOBILE & RESPONSIVE COMPACT STYLES FOR GLOBAL SHEET & CENTRAL REGISTRY
+   ========================================================================== */
+
+.global-page {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Header Layout */
+.global-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.global-header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Summary Grid */
+.global-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.summary-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+.summary-icon {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    border-radius: 6px;
+    background: #f1f5f9;
+    flex-shrink: 0;
+}
+
+/* Search Toolbar */
+.global-toolbar {
+    margin-bottom: 16px;
+}
+
+.search-form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+}
+
+.search-box {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 6px 10px;
+}
+
+.search-box input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 0.88rem;
+}
+
+/* Table Layout & Mobile Scrolling Wrapper */
+.global-table-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.table-header {
+    margin-bottom: 12px;
+}
+
+.table-header h2 {
+    font-size: 1.15rem;
+    margin: 0;
+}
+
+.table-header p {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin: 2px 0 0 0;
+}
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 6px;
+}
+
+.global-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    text-align: left;
+}
+
+.global-table th, 
+.global-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #f1f5f9;
+    white-space: nowrap;
+}
+
+.member-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.member-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.registry-id {
+    font-family: monospace;
+    font-weight: 600;
+    font-size: 0.8rem;
+    background: #f8fafc;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+}
+
+.family-badge {
+    background: #eff6ff;
+    color: #1e40af;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.78rem;
+    font-weight: 500;
+}
+
+.registered-date {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.8rem;
+}
+
+.registered-date span {
+    font-size: 0.72rem;
+    color: #64748b;
+}
+
+/* ==========================================================================
+   TARGETED MOBILE BREAKPOINTS (< 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+    .global-header {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .global-header h1 {
+        font-size: 1.3rem;
+        margin-top: 2px;
+        margin-bottom: 4px;
+    }
+
+    .section-kicker {
+        font-size: 0.72rem;
+    }
+
+    .global-header p {
+        font-size: 0.8rem;
+    }
+
+    .global-header-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 6px;
+    }
+
+    .global-header-actions a {
+        width: 100%;
+        justify-content: center;
+        box-sizing: border-box;
+        text-align: center;
+        font-size: 0.8rem !important;
+        padding: 8px 10px !important;
+    }
+
+    .global-summary {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .summary-card {
+        padding: 8px 10px;
+        gap: 8px;
+    }
+
+    .summary-card span {
+        font-size: 0.72rem;
+    }
+
+    .summary-card strong {
+        font-size: 0.95rem;
+    }
+
+    .search-form {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .search-box {
+        width: 100%;
+        font-size: 0.82rem;
+        padding: 6px 8px;
+    }
+
+    .search-button, .clear-search {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+
+    .global-table-card {
+        padding: 10px 8px;
+    }
+
+    .table-header h2 {
+        font-size: 1rem;
+    }
+
+    .table-header p {
+        font-size: 0.78rem;
+    }
+
+    .global-table th, 
+    .global-table td {
+        padding: 6px 8px;
+        font-size: 0.78rem;
+    }
+
+    .member-avatar {
+        width: 24px;
+        height: 24px;
+        font-size: 0.7rem;
+    }
+
+    .registry-id {
+        font-size: 0.72rem;
+        padding: 2px 4px;
+    }
+
+    .family-badge {
+        font-size: 0.72rem;
+        padding: 1px 6px;
+    }
+
+    .registered-date strong {
+        font-size: 0.75rem;
+    }
+
+    .registered-date span {
+        font-size: 0.68rem;
+    }
+
+    .view-button {
+        padding: 3px 8px;
+        font-size: 0.75rem;
+    }
+}
+</style>
+
 <div class="global-page">
 
 <!-- =====================================
@@ -28,7 +333,7 @@ GLOBAL SHEET
         </p>
     </div>
 
-    <div class="global-header-actions" style="display: flex; gap: 10px; align-items: center;">
+    <div class="global-header-actions">
         
         <!-- EXPORT TO EXCEL BUTTON -->
         <a 

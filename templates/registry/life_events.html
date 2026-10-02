@@ -13,8 +13,14 @@
 
 <style>
     /* =========================================================
-       DASHBOARD MATCHING STYLES FOR LIFE EVENTS
+       DASHBOARD & LIFE EVENTS BASE STYLES
     ========================================================= */
+
+    .life-events-page {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
 
     .dashboard-intro {
         display: flex;
@@ -103,7 +109,7 @@
     }
 
     /* =========================================================
-       COMPRESSED STATS ROW
+       STATISTICS GRID
     ========================================================= */
 
     .dashboard-stats {
@@ -185,12 +191,6 @@
         color: #9ca3af;
     }
 
-    @media (max-width: 1100px) {
-        .dashboard-stats {
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        }
-    }
-
     /* =========================================================
        FILTER TABS
     ========================================================= */
@@ -228,6 +228,14 @@
        SEARCH FORM & TABLE CARD
     ========================================================= */
 
+    .dashboard-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
     .dashboard-search-wrapper {
         display: flex;
         gap: 8px;
@@ -246,6 +254,23 @@
 
     .dashboard-search-wrapper input::placeholder {
         color: rgba(255, 255, 255, 0.6);
+    }
+
+    .table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .table-wrapper table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .table-wrapper th, 
+    .table-wrapper td {
+        padding: 10px 12px;
+        text-align: left;
     }
 
     /* Event Badges */
@@ -276,6 +301,150 @@
     .event-badge.event-death {
         background: rgba(107, 114, 128, 0.2);
         color: #cbd5e1;
+    }
+
+    /* =========================================================
+       RESPONSIVE & MOBILE COMPACT STYLES (< 768px)
+    ========================================================= */
+
+    @media (max-width: 1100px) {
+        .dashboard-stats {
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-intro {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .dashboard-intro-logo-left img {
+            width: 46px;
+            height: 46px;
+        }
+
+        .dashboard-title-flex {
+            gap: 10px;
+        }
+
+        .dashboard-intro-main h1 {
+            font-size: 1.25rem;
+            margin: 2px 0;
+        }
+
+        .dashboard-intro-main p {
+            font-size: 0.82rem;
+            margin-top: 4px;
+        }
+
+        .dashboard-header-actions {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .dashboard-btn {
+            width: 100%;
+            justify-content: center;
+            padding: 8px 10px;
+            font-size: 0.78rem;
+            box-sizing: border-box;
+        }
+
+        .dashboard-stats {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .dashboard-stat-card {
+            padding: 8px;
+            gap: 8px;
+        }
+
+        .dashboard-stat-icon {
+            width: 32px;
+            height: 32px;
+            font-size: 14px;
+            border-radius: 8px;
+        }
+
+        .dashboard-stat-card strong {
+            font-size: 15px;
+        }
+
+        .dashboard-stat-card span {
+            font-size: 10px;
+        }
+
+        .dashboard-stat-card small {
+            font-size: 9px;
+            display: block;
+        }
+
+        .filter-tabs-bar {
+            overflow-x: auto;
+            flex-wrap: nowrap;
+            padding-bottom: 6px;
+            margin-bottom: 14px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .filter-tab-pill {
+            padding: 5px 12px;
+            font-size: 11px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .dashboard-card-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .dashboard-search-wrapper {
+            width: 100%;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .dashboard-search-wrapper input {
+            width: 100%;
+            font-size: 0.82rem;
+            padding: 6px 10px;
+            box-sizing: border-box;
+        }
+
+        .dashboard-search-wrapper .dashboard-btn {
+            width: auto;
+            flex: 1;
+        }
+
+        .table-wrapper table {
+            font-size: 0.78rem;
+            white-space: nowrap;
+        }
+
+        .table-wrapper th, 
+        .table-wrapper td {
+            padding: 6px 8px;
+        }
+
+        .event-badge {
+            padding: 2px 6px;
+            font-size: 10px;
+        }
+
+        .recent-view {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+        }
     }
 </style>
 
