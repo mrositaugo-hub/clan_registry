@@ -82,6 +82,19 @@ def _calculate_age(dob):
     return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
 
 
+def _get_member_dob_and_age(member):
+    """Helper to extract DOB string and calculated age for a member."""
+    dob_field = _get_dob_field_name()
+    if not dob_field:
+        return None, None
+    dob_val = getattr(member, dob_field, None)
+    if not dob_val:
+        return None, None
+    age = _calculate_age(dob_val)
+    dob_str = dob_val.strftime("%B %d, %Y") if hasattr(dob_val, "strftime") else str(dob_val)
+    return dob_str, age
+
+
 def _has_word(text, keywords):
     """Checks if any keyword exists as a full word within text."""
     pattern = r'\b(' + '|'.join([re.escape(k) for k in keywords]) + r')\b'
@@ -97,7 +110,8 @@ def _extract_search_keywords(query_text):
         r'\bsearch for\b', r'\blookup\b', r'\bfind\b', r'\bshow me\b',
         r'\bdo you know\b', r'\bwhat about\b', r'\bcan you tell me\b',
         r'\bis there a\b', r'\bis there any\b', r'\bplease\b',
-        r'\bhow many\b', r'\bhow much\b'
+        r'\bhow many\b', r'\bhow much\b', r'\bhow old is\b', r'\bhow old\b',
+        r'\bwhat is the age of\b', r'\bwhat is\b', r'\bwhen was\b'
     ]
     for phrase in phrases_to_remove:
         text = re.sub(phrase, '', text, flags=re.IGNORECASE)
@@ -272,20 +286,27 @@ def process_historian_question(request, question):
     if q_lower in greetings or any(q_lower.startswith(g + " ") or q_lower.startswith(g + "!") for g in greetings):
         return (
             "Greetings! I am the UMUOTUTO Historian. You can ask me about:\n"
-            "• Member details (e.g., 'Who is Ebube Emmanuel?', 'Is he married?', 'Who is his father?')\n"
-            "• Lineages & Families (e.g., 'Umunagwu lineage')\n"
+            "• Member details & Age (e.g., 'Who is Ebube Emmanuel?', 'How old is he?', 'When was he born?')\n"
+            "• Family relationships (e.g., 'Who is his father?', 'Is he married?', 'Does he have children?')\n"
+            "• Lineages & Families (e.g., 'Umunagwu lineage', 'Who belongs to Umunagwu?')\n"
             "• Oldest/Youngest members (e.g., 'Who is the oldest living member?')\n"
-            "• Member status counts (e.g., 'How many married members are registered?')\n"
+            "• Record counts & statistics (e.g., 'How many members are registered?', 'How many married members?')\n"
             "• Event records (e.g., 'How many marriage/death/name change records exist?')",
             [],
         )
 
     # ============================================================
-    # 2. GLOBAL AGGREGATION & COUNTS (Evaluated BEFORE individual member follow-ups)
+    # 2. GLOBAL AGGREGATION & COUNTS
     # ============================================================
-    is_count_query = _has_word(q_lower, ["how many", "count", "total", "number of"])
+    is_count_query = _has_word(q_lower, ["how many", "count", "total", "number of", "how much"])
 
     if is_count_query or "how many" in q_lower:
+        # Total Registered Members
+        if _has_word(q_lower, ["member", "members", "people", "registered", "registry", "records", "all"]):
+            if not _has_word(q_lower, ["married", "single", "female", "women", "girls", "male", "men", "boys", "deceased", "dead", "living", "alive"]):
+                total = Registry.objects.count()
+                return f"There are currently {total} member(s) registered in the system.", []
+
         # Married Count
         if "married" in q_lower:
             members = list(Registry.objects.filter(marital_status__iexact="MARRIED"))
@@ -322,6 +343,18 @@ def process_historian_question(request, question):
             request.session.modified = True
             return f"There are {count} registered male member(s).", members
 
+        # Deceased / Living Counts
+        if _has_word(q_lower, ["deceased", "dead"]):
+            death_events = LifeEvent.objects.filter(event_type__icontains="DEATH")
+            deceased_ids = set(death_events.values_list("member_id", flat=True))
+            count = len(deceased_ids)
+            return f"There are {count} recorded deceased member(s) in the registry.", []
+
+        if _has_word(q_lower, ["living", "alive"]):
+            deceased_ids = set(LifeEvent.objects.filter(event_type__icontains="DEATH").values_list("member_id", flat=True))
+            living_count = Registry.objects.exclude(id__in=deceased_ids).count()
+            return f"There are {living_count} living registered member(s).", []
+
     # Global Life Event Counts
     if _has_word(q_lower, ["marriage", "marriages"]):
         event_count = LifeEvent.objects.filter(event_type__icontains="MARRIAGE").count()
@@ -342,7 +375,7 @@ def process_historian_question(request, question):
     # ============================================================
     # 3. OLDEST / YOUNGEST LIVING MEMBER LOOKUP
     # ============================================================
-    if _has_word(q_lower, ["oldest", "eldest", "youngest", "senior", "age"]):
+    if _has_word(q_lower, ["oldest", "eldest", "youngest", "senior"]):
         is_oldest = _has_word(q_lower, ["oldest", "eldest", "senior"])
         label = "oldest" if is_oldest else "youngest"
 
@@ -364,10 +397,8 @@ def process_historian_question(request, question):
             member_with_dob = living_qs.filter(**{f"{dob_field}__isnull": False}).order_by(order_clause).first()
 
             if member_with_dob:
-                dob_val = getattr(member_with_dob, dob_field)
-                age = _calculate_age(dob_val)
+                dob_str, age = _get_member_dob_and_age(member_with_dob)
                 age_str = f" (Age: {age})" if age is not None else ""
-                dob_str = dob_val.strftime("%B %d, %Y") if hasattr(dob_val, "strftime") else str(dob_val)
 
                 m_name = f"{member_with_dob.surname} {member_with_dob.firstname}"
                 m_id = getattr(member_with_dob, "aut_id", member_with_dob.id)
@@ -378,7 +409,7 @@ def process_historian_question(request, question):
 
                 return (
                     f"The {label} living registered member is {m_name} (ID: {m_id}).\n"
-                    f"• Date of Birth: {dob_str}{age_str}\n"
+                    f"• Date of Birth: {dob_str or 'Not specified'}{age_str}\n"
                     f"• Family Root: {getattr(member_with_dob, 'family_root', getattr(member_with_dob, 'lineage', 'N/A'))}\n"
                     f"• Marital Status: {getattr(member_with_dob, 'marital_status', 'N/A')}",
                     [member_with_dob],
@@ -465,13 +496,44 @@ def process_historian_question(request, question):
     followup_keywords = [
         "he", "she", "his", "her", "him", "married", "single", "divorced",
         "status", "child", "children", "daughter", "son", "father", "dad",
-        "mother", "mom", "parent", "parents", "wife", "husband", "spouse", "age", "born",
-        "life event", "life events", "name change", "changed name", "events"
+        "mother", "mom", "parent", "parents", "wife", "husband", "spouse",
+        "age", "old", "born", "dob", "birthday", "birth", "alive", "dead",
+        "deceased", "gender", "sex", "phone", "email", "address", "location",
+        "occupation", "profession", "job", "life event", "life events",
+        "name change", "changed name", "events", "id"
     ]
 
     if context_member and _has_word(q_lower, followup_keywords):
         m_name = f"{context_member.surname} {context_member.firstname}"
         m_id = getattr(context_member, "aut_id", context_member.id)
+
+        # Age & Date of Birth Lookup
+        if _has_word(q_lower, ["age", "old", "born", "dob", "birthday", "birth"]):
+            dob_str, age = _get_member_dob_and_age(context_member)
+            if dob_str:
+                age_text = f" and is {age} years old" if age is not None else ""
+                return f"{m_name} (ID: {m_id}) was born on {dob_str}{age_text}.", [context_member]
+            return f"No date of birth is specified on file for {m_name} (ID: {m_id}).", [context_member]
+
+        # Deceased / Living Status
+        if _has_word(q_lower, ["alive", "dead", "deceased", "living"]):
+            has_death_event = LifeEvent.objects.filter(
+                member=context_member, event_type__icontains="DEATH"
+            ).exists()
+            is_deceased = getattr(context_member, "is_deceased", False) or getattr(context_member, "status", "").upper() == "DECEASED" or has_death_event
+
+            if is_deceased:
+                return f"According to registry records, {m_name} (ID: {m_id}) is deceased.", [context_member]
+            return f"According to registry records, {m_name} (ID: {m_id}) is currently living.", [context_member]
+
+        # Gender Lookup
+        if _has_word(q_lower, ["gender", "sex"]):
+            gender = getattr(context_member, "gender", "Not recorded")
+            return f"The registered gender for {m_name} (ID: {m_id}) is {gender}.", [context_member]
+
+        # ID / Registry Number
+        if _has_word(q_lower, ["id", "aut_id", "registry id", "number"]):
+            return f"The Registry ID for {m_name} is {m_id}.", [context_member]
 
         # Life Events check
         if _has_word(q_lower, ["life event", "life events", "name change", "changed name", "events"]):
@@ -593,6 +655,17 @@ def process_historian_question(request, question):
                     return f"{m_name} has {count} registered child(ren) on file:\n{names}", all_children
                 return f"No registered children were found on file for {m_name} (ID: {m_id}).", []
 
+        # Contact / Address / Occupation
+        if _has_word(q_lower, ["phone", "email", "address", "location", "occupation", "profession", "job"]):
+            details = []
+            for field in ["phone", "phone_number", "email", "address", "residence", "occupation", "profession"]:
+                if hasattr(context_member, field) and getattr(context_member, field):
+                    label = field.replace('_', ' ').title()
+                    details.append(f"• {label}: {getattr(context_member, field)}")
+            if details:
+                return f"Contact/Profile details for {m_name} (ID: {m_id}):\n" + "\n".join(details), [context_member]
+            return f"No contact or occupation details are specified on file for {m_name} (ID: {m_id}).", [context_member]
+
     # ============================================================
     # 7. DIRECT MEMBER & FALLBACK KEYWORD LOOKUP
     # ============================================================
@@ -608,11 +681,25 @@ def process_historian_question(request, question):
 
             if count == 1:
                 m = members[0]
+                m_name = f"{m.surname} {m.firstname} {getattr(m, 'middlename', '') or ''}".strip()
+                m_id = getattr(m, 'aut_id', m.id)
+
+                dob_str, age = _get_member_dob_and_age(m)
+                age_line = f"\n• Date of Birth: {dob_str} (Age: {age})" if dob_str and age is not None else (f"\n• Date of Birth: {dob_str}" if dob_str else "")
+
+                # If user specifically asked for age on a single member search (e.g., "how old is Ebube")
+                if _has_word(q_lower, ["age", "old", "born", "dob", "birthday"]):
+                    if dob_str:
+                        age_text = f" and is {age} years old" if age is not None else ""
+                        return f"{m_name} (ID: {m_id}) was born on {dob_str}{age_text}.", [m]
+                    return f"Found record for {m_name} (ID: {m_id}), but no date of birth is specified on file.", [m]
+
                 life_events_text = _get_member_life_events_summary(m)
 
                 return (
-                    f"Found record for {m.surname} {m.firstname} {getattr(m, 'middlename', '') or ''}\n"
-                    f"• Registry ID: {getattr(m, 'aut_id', m.id)}\n"
+                    f"Found record for {m_name}\n"
+                    f"• Registry ID: {m_id}"
+                    f"{age_line}\n"
                     f"• Gender: {getattr(m, 'gender', 'N/A')}\n"
                     f"• Family Root: {getattr(m, 'family_root', getattr(m, 'lineage', 'N/A'))}\n"
                     f"• Marital Status: {getattr(m, 'marital_status', 'N/A')}"
@@ -631,8 +718,9 @@ def process_historian_question(request, question):
         f"I couldn't find any registered member or life event matching '{query_display}'. "
         "Please provide a member's current or former name, Registry ID, or ask questions like:\n"
         "• 'Who is Ebube Emmanuel?'\n"
+        "• 'How old is he?' or 'When was he born?'\n"
         "• 'Who is the oldest living member?'\n"
-        "• 'How many married/single members are registered?'\n"
+        "• 'How many members are registered?'\n"
         "• 'Umunagwu lineage' or 'Who belongs to Umunagwu?'\n"
         "• 'How many Marriage/Death/Name Change records are there?'",
         [],
