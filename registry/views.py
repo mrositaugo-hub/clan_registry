@@ -521,6 +521,13 @@ def life_events(request):
         or ""
     ).strip().upper()
 
+    # Calculate overall stats for dashboard summary cards
+    total_events = LifeEvent.objects.count()
+    total_marriages = LifeEvent.objects.filter(event_type="MARRIAGE").count()
+    total_divorces = LifeEvent.objects.filter(event_type="DIVORCE").count()
+    total_name_changes = LifeEvent.objects.filter(event_type__icontains="NAME").count()
+    total_deaths = LifeEvent.objects.filter(event_type="DEATH").count()
+
     events = (
         LifeEvent.objects
         .select_related("member")
@@ -543,12 +550,63 @@ def life_events(request):
             | Q(member__firstname__icontains=query)
             | Q(member__middlename__icontains=query)
             | Q(event_location__icontains=query)
+            | Q(event_type__icontains=query)
         )
+
+    # --------------------------------------------------------
+    # EXCEL / CSV EXPORT FOR LIFE EVENTS
+    # --------------------------------------------------------
+    export_format = request.GET.get("export", "").strip().lower()
+    if export_format in ["excel", "csv"]:
+        response = HttpResponse(content_type="text/csv; charset=utf-8")
+        response["Content-Disposition"] = 'attachment; filename="umuotuto_life_events.csv"'
+        response.write('\ufeff')
+
+        writer = csv.writer(response)
+        writer.writerow([
+            "Member ID",
+            "Surname",
+            "First Name",
+            "Middle Name",
+            "Event Type",
+            "Event Date",
+            "Event Location",
+        ])
+
+        for event in events:
+            member = event.member
+            event_date_str = (
+                event.event_date.strftime("%Y-%m-%d")
+                if event.event_date and hasattr(event.event_date, "strftime")
+                else (str(event.event_date) if event.event_date else "")
+            )
+            event_type_str = (
+                event.get_event_type_display()
+                if hasattr(event, "get_event_type_display")
+                else getattr(event, "event_type", "")
+            )
+
+            writer.writerow([
+                getattr(member, "aut_id", "") if member else "",
+                getattr(member, "surname", "") if member else "",
+                getattr(member, "firstname", "") if member else "",
+                getattr(member, "middlename", "") or "" if member else "",
+                event_type_str or "",
+                event_date_str,
+                getattr(event, "event_location", "") or "",
+            ])
+
+        return response
 
     context = {
         "events": events,
         "query": query,
         "event_type_filter": event_type_filter,
+        "total_events": total_events,
+        "total_marriages": total_marriages,
+        "total_divorces": total_divorces,
+        "total_name_changes": total_name_changes,
+        "total_deaths": total_deaths,
     }
 
     return render(
