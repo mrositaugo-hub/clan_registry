@@ -1,4 +1,5 @@
 {% extends "registry/base.html" %}
+{% load static %}
 
 {% block title %}
     Life Events | Clan Registry
@@ -10,226 +11,566 @@
 
 {% block content %}
 
-<div class="page-intro">
+<style>
+    /* =========================================================
+       DASHBOARD MATCHING STYLES FOR LIFE EVENTS
+    ========================================================= */
 
-    <div>
-        <p class="section-kicker">CLAN HISTORY</p>
+    .dashboard-intro {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 24px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+    }
 
-        <h3>
-            Life Events Registry
-        </h3>
+    .dashboard-intro-main {
+        flex: 1;
+        min-width: 280px;
+    }
 
-        <p>
-            Record and preserve important life events of registered clan members.
-        </p>
-    </div>
+    .dashboard-title-flex {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 8px;
+    }
 
-    <a
-        href="{% url 'new_life_event' %}"
-        class="primary-button"
-    >
-        + Add Life Event
-    </a>
+    .dashboard-intro-logo-left img {
+        width: 68px;
+        height: 68px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.25);
+        filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.25));
+        transition: transform 0.2s ease;
+    }
 
-</div>
+    .dashboard-intro-logo-left img:hover {
+        transform: scale(1.05);
+    }
 
+    .dashboard-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
 
-<div class="stats-grid">
+    .dashboard-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 13px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border: none;
+    }
 
-    <div class="stat-card">
+    .dashboard-btn-primary {
+        background: var(--purple, #4B1F7A);
+        color: #ffffff;
+    }
 
-        <div class="stat-icon">
-            ◷
-        </div>
+    .dashboard-btn-primary:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
 
-        <div>
-            <span>Total Events</span>
+    .dashboard-btn-excel {
+        background: #107c41;
+        color: #ffffff;
+    }
 
-            <strong>
-                {{ total_events }}
-            </strong>
-        </div>
+    .dashboard-btn-excel:hover {
+        background: #0e6b37;
+        transform: translateY(-1px);
+    }
 
-    </div>
+    .dashboard-btn-secondary {
+        background: rgba(255, 255, 255, 0.12);
+        color: inherit;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+    }
 
-</div>
+    .dashboard-btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
 
+    /* =========================================================
+       COMPRESSED STATS ROW
+    ========================================================= */
 
-<div class="table-card">
+    .dashboard-stats {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+    }
 
-    <div class="table-header">
+    a.dashboard-stat-card {
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
+        transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+    }
 
-        <div>
-            <h3>
-                Recorded Life Events
-            </h3>
+    a.dashboard-stat-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .dashboard-stat-card {
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .dashboard-stat-card strong {
+        font-size: 18px;
+        line-height: 1.2;
+    }
+
+    .dashboard-stat-card span {
+        font-size: 11px;
+        white-space: nowrap;
+    }
+
+    .dashboard-stat-card small {
+        font-size: 10px;
+        white-space: nowrap;
+        opacity: 0.75;
+    }
+
+    .dashboard-stat-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+
+    .dashboard-stat-icon.events {
+        background: rgba(59, 130, 246, 0.15);
+        color: #3b82f6;
+    }
+
+    .dashboard-stat-icon.marriage {
+        background: rgba(236, 72, 153, 0.15);
+        color: #ec4899;
+    }
+
+    .dashboard-stat-icon.name-change {
+        background: rgba(217, 119, 6, 0.15);
+        color: #d97706;
+    }
+
+    .dashboard-stat-icon.divorce {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+    }
+
+    .dashboard-stat-icon.death {
+        background: rgba(107, 114, 128, 0.2);
+        color: #9ca3af;
+    }
+
+    @media (max-width: 1100px) {
+        .dashboard-stats {
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        }
+    }
+
+    /* =========================================================
+       FILTER TABS
+    ========================================================= */
+
+    .filter-tabs-bar {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .filter-tab-pill {
+        padding: 7px 15px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        color: inherit;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        transition: all 0.2s ease;
+    }
+
+    .filter-tab-pill:hover {
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .filter-tab-pill.active {
+        background: var(--purple, #4B1F7A);
+        color: #ffffff;
+        border-color: var(--purple, #4B1F7A);
+    }
+
+    /* =========================================================
+       SEARCH FORM & TABLE CARD
+    ========================================================= */
+
+    .dashboard-search-wrapper {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .dashboard-search-wrapper input {
+        padding: 8px 14px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.08);
+        color: inherit;
+        font-size: 13px;
+        outline: none;
+    }
+
+    .dashboard-search-wrapper input::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* Event Badges */
+    .event-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+
+    .event-badge.event-marriage {
+        background: rgba(236, 72, 153, 0.15);
+        color: #f472b6;
+    }
+
+    .event-badge.event-name_change {
+        background: rgba(217, 119, 6, 0.15);
+        color: #fbbf24;
+    }
+
+    .event-badge.event-divorce {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+    }
+
+    .event-badge.event-death {
+        background: rgba(107, 114, 128, 0.2);
+        color: #cbd5e1;
+    }
+</style>
+
+<div class="dashboard-page life-events-page">
+
+    <!-- =========================================
+         HEADER WITH LEFT LOGO & ACTIONS
+         ========================================= -->
+
+    <div class="dashboard-intro">
+
+        <div class="dashboard-intro-main">
+            <div class="dashboard-title-flex">
+                <!-- LEFT LOGO -->
+                <div class="dashboard-intro-logo-left">
+                    <img src="{% static 'images/umu.jpeg' %}" alt="Umuotuto Ofuobi Logo">
+                </div>
+
+                <div>
+                    <p class="section-kicker">
+                        UMUOTUTO DATA REGISTRY
+                    </p>
+
+                    <h1>
+                        Life Events Registry
+                    </h1>
+                </div>
+            </div>
 
             <p>
-                Search events by member, event type or location.
+                Record and preserve important historical life events of registered clan members.
             </p>
         </div>
 
-        <form
-            method="get"
-            class="search-form"
-        >
-
-            <input
-                type="search"
-                name="search"
-                value="{{ search_query }}"
-                placeholder="Search life events..."
+        <div class="dashboard-header-actions">
+            <!-- EXPORT TO EXCEL BUTTON -->
+            <a 
+                href="{% url 'life_events' %}?export=excel{% if query %}&q={{ query }}{% endif %}{% if event_type_filter %}&type={{ event_type_filter }}{% endif %}" 
+                class="dashboard-btn dashboard-btn-excel"
             >
-
-            <button
-                type="submit"
-                class="search-button"
-            >
-                Search
-            </button>
-
-        </form>
-
-    </div>
-
-
-    {% if events %}
-
-    <div class="table-wrapper">
-
-        <table>
-
-            <thead>
-
-                <tr>
-                    <th>Member ID</th>
-                    <th>Clan Member</th>
-                    <th>Event</th>
-                    <th>Date</th>
-                    <th>Location</th>
-                    <th>Action</th>
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-                {% for event in events %}
-
-                <tr>
-
-                    <td>
-                        <strong>
-                            {{ event.member.aut_id }}
-                        </strong>
-                    </td>
-
-                    <td>
-
-                        <div class="member-name">
-
-                            <strong>
-                                {{ event.member.surname }}
-                                {{ event.member.firstname }}
-                            </strong>
-
-                            {% if event.member.middlename %}
-                                <span>
-                                    {{ event.member.middlename }}
-                                </span>
-                            {% endif %}
-
-                        </div>
-
-                    </td>
-
-                    <td>
-
-                        <span class="event-badge event-{{ event.event_type|lower }}">
-                            {{ event.get_event_type_display }}
-                        </span>
-
-                    </td>
-
-                    <td>
-                        {{ event.event_date|date:"d M Y" }}
-                    </td>
-
-                    <td>
-
-                        {% if event.event_location %}
-                            {{ event.event_location }}
-                        {% else %}
-                            —
-                        {% endif %}
-
-                    </td>
-
-                    <td>
-
-                        <a
-                            href="{% url 'view_life_event' event.pk %}"
-                            class="view-button"
-                        >
-                            View
-                        </a>
-
-                    </td>
-
-                </tr>
-
-                {% endfor %}
-
-            </tbody>
-
-        </table>
-
-    </div>
-
-    {% else %}
-
-    <div class="empty-state">
-
-        <div class="empty-icon">
-            ◷
-        </div>
-
-        <h3>
-            No Life Events Found
-        </h3>
-
-        {% if search_query %}
-
-            <p>
-                No life events matched
-                <strong>"{{ search_query }}"</strong>.
-            </p>
-
-            <a
-                href="{% url 'life_events' %}"
-                class="secondary-button"
-            >
-                Clear Search
+                📊 Export to Excel
             </a>
+
+            <a href="{% url 'new_life_event' %}" class="dashboard-btn dashboard-btn-primary">
+                ＋ Add Life Event
+            </a>
+        </div>
+
+    </div>
+
+
+    <!-- =========================================
+         STATISTICS GRID (CLICKABLE CARDS)
+         ========================================= -->
+
+    <div class="dashboard-stats">
+
+        <a href="{% url 'life_events' %}" class="dashboard-stat-card">
+            <div class="dashboard-stat-icon events">
+                ◷
+            </div>
+            <div>
+                <span>Total Events</span>
+                <strong>{{ total_events|default:"0" }}</strong>
+                <small>Historical records</small>
+            </div>
+        </a>
+
+        <a href="{% url 'life_events' %}?type=MARRIAGE" class="dashboard-stat-card">
+            <div class="dashboard-stat-icon marriage">
+                ♡
+            </div>
+            <div>
+                <span>Marriages</span>
+                <strong>{{ total_marriages|default:"0" }}</strong>
+                <small>Marriage records</small>
+            </div>
+        </a>
+
+        <a href="{% url 'life_events' %}?type=NAME_CHANGE" class="dashboard-stat-card">
+            <div class="dashboard-stat-icon name-change">
+                ✎
+            </div>
+            <div>
+                <span>Name Changes</span>
+                <strong>{{ total_name_changes|default:"0" }}</strong>
+                <small>Name changes</small>
+            </div>
+        </a>
+
+        <a href="{% url 'life_events' %}?type=DIVORCE" class="dashboard-stat-card">
+            <div class="dashboard-stat-icon divorce">
+                ⚡
+            </div>
+            <div>
+                <span>Divorces</span>
+                <strong>{{ total_divorces|default:"0" }}</strong>
+                <small>Divorce records</small>
+            </div>
+        </a>
+
+        <a href="{% url 'life_events' %}?type=DEATH" class="dashboard-stat-card">
+            <div class="dashboard-stat-icon death">
+                †
+            </div>
+            <div>
+                <span>Deaths</span>
+                <strong>{{ total_deaths|default:"0" }}</strong>
+                <small>Recorded deaths</small>
+            </div>
+        </a>
+
+    </div>
+
+
+    <!-- =========================================
+         QUICK FILTER TABS
+         ========================================= -->
+
+    <div class="filter-tabs-bar">
+
+        <a href="{% url 'life_events' %}" class="filter-tab-pill {% if not event_type_filter %}active{% endif %}">
+            All Events
+        </a>
+
+        <a href="{% url 'life_events' %}?type=MARRIAGE" class="filter-tab-pill {% if event_type_filter == 'MARRIAGE' %}active{% endif %}">
+            ♡ Marriages
+        </a>
+
+        <a href="{% url 'life_events' %}?type=NAME_CHANGE" class="filter-tab-pill {% if 'NAME' in event_type_filter %}active{% endif %}">
+            ✎ Name Changes
+        </a>
+
+        <a href="{% url 'life_events' %}?type=DIVORCE" class="filter-tab-pill {% if event_type_filter == 'DIVORCE' %}active{% endif %}">
+            ⚡ Divorces
+        </a>
+
+        <a href="{% url 'life_events' %}?type=DEATH" class="filter-tab-pill {% if event_type_filter == 'DEATH' %}active{% endif %}">
+            † Deaths
+        </a>
+
+    </div>
+
+
+    <!-- =========================================
+         MAIN TABLE CARD (DASHBOARD CARD STYLE)
+         ========================================= -->
+
+    <div class="dashboard-card">
+
+        <div class="dashboard-card-header">
+
+            <div>
+                <p class="section-kicker">HISTORY</p>
+                <h2>Recorded Life Events</h2>
+            </div>
+
+            <form method="get" action="{% url 'life_events' %}" class="dashboard-search-wrapper">
+
+                {% if event_type_filter %}
+                    <input type="hidden" name="type" value="{{ event_type_filter }}">
+                {% endif %}
+
+                <input
+                    type="search"
+                    name="q"
+                    value="{{ query }}"
+                    placeholder="Search life events..."
+                    autocomplete="off"
+                >
+
+                <button type="submit" class="dashboard-btn dashboard-btn-primary">
+                    Search
+                </button>
+
+                {% if query or event_type_filter %}
+                    <a href="{% url 'life_events' %}" class="dashboard-btn dashboard-btn-secondary">
+                        Clear
+                    </a>
+                {% endif %}
+
+            </form>
+
+        </div>
+
+
+        {% if events %}
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Member ID</th>
+                            <th>Clan Member</th>
+                            <th>Event</th>
+                            <th>Date</th>
+                            <th>Location</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for event in events %}
+
+                        <tr>
+
+                            <td>
+                                <strong>{{ event.member.aut_id }}</strong>
+                            </td>
+
+                            <td>
+                                <div class="member-name">
+                                    <strong>
+                                        {{ event.member.surname }} {{ event.member.firstname }}
+                                    </strong>
+
+                                    {% if event.member.middlename %}
+                                        <span>{{ event.member.middlename }}</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="event-badge event-{{ event.event_type|lower }}">
+                                    {{ event.get_event_type_display }}
+                                </span>
+                            </td>
+
+                            <td>
+                                {{ event.event_date|date:"d M Y" }}
+                            </td>
+
+                            <td>
+                                {% if event.event_location %}
+                                    {{ event.event_location }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <a href="{% url 'view_life_event' event.pk %}" class="recent-view">
+                                    View
+                                </a>
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
 
         {% else %}
 
-            <p>
-                No life events have been recorded yet.
-            </p>
+            <div class="dashboard-empty" style="padding: 40px; text-align: center;">
 
-            <a
-                href="{% url 'new_life_event' %}"
-                class="primary-button"
-            >
-                + Record First Event
-            </a>
+                <div style="font-size: 28px; margin-bottom: 8px;">◷</div>
+
+                <h3 style="margin-bottom: 8px;">No Life Events Found</h3>
+
+                {% if query or event_type_filter %}
+
+                    <p style="margin-bottom: 16px;">
+                        No life events matched your filter criteria
+                        {% if query %}for "<strong>{{ query }}</strong>"{% endif %}.
+                    </p>
+
+                    <a href="{% url 'life_events' %}" class="dashboard-btn dashboard-btn-secondary">
+                        Clear Filters
+                    </a>
+
+                {% else %}
+
+                    <p style="margin-bottom: 16px;">
+                        No life events have been recorded yet.
+                    </p>
+
+                    <a href="{% url 'new_life_event' %}" class="dashboard-btn dashboard-btn-primary">
+                        + Record First Event
+                    </a>
+
+                {% endif %}
+
+            </div>
 
         {% endif %}
 
     </div>
-
-    {% endif %}
 
 </div>
 

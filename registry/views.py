@@ -1,3 +1,5 @@
+import csv
+from django.http import HttpResponse
 from django.db import transaction
 from django.contrib import messages
 from django.db.models import Q
@@ -54,8 +56,7 @@ def dashboard(request):
         marital_status="DIVORCED"
     ).count()
 
-    total_life_events = LifeEvent.objects.count()
-    total_events = total_life_events
+    total_events = LifeEvent.objects.count()
 
     total_marriages = LifeEvent.objects.filter(
         event_type="MARRIAGE"
@@ -108,7 +109,6 @@ def dashboard(request):
         "married_members": married_members,
         "single_members": single_members,
         "divorced_members": divorced_members,
-        "total_life_events": total_life_events,
         "total_events": total_events,
         "total_marriages": total_marriages,
         "total_divorces": total_divorces,
@@ -117,7 +117,6 @@ def dashboard(request):
         "family_root_counts": family_root_counts,
         "recent_members": recent_members,
         "recent_events": recent_events,
-        "recent_life_events": recent_events,
     }
 
     return render(
@@ -134,16 +133,6 @@ def dashboard(request):
 def new_registry(request):
 
     if request.method == "POST":
-
-        print(
-            "POST immediate_father:",
-            request.POST.get("immediate_father")
-        )
-
-        print(
-            "POST manual_immediate_father:",
-            request.POST.get("manual_immediate_father")
-        )
 
         # ----------------------------------------------------
         # MAIN REGISTRY FORM
@@ -185,9 +174,6 @@ def new_registry(request):
 
         # ----------------------------------------------------
         # DIVORCE FORMSET
-        #
-        # Divorce is only relevant when the member is
-        # registered as DIVORCED.
         # ----------------------------------------------------
 
         marital_status = (
@@ -200,11 +186,8 @@ def new_registry(request):
         )
 
         if marital_status == "DIVORCED":
-
             divorce_valid = divorce_formset.is_valid()
-
         else:
-
             divorce_valid = True
 
         # ----------------------------------------------------
@@ -217,166 +200,145 @@ def new_registry(request):
             and divorce_valid
         ):
 
-            # ------------------------------------------------
-            # SAVE MEMBER
-            # ------------------------------------------------
-
-            member = form.save()
-
-            # ------------------------------------------------
-            # SAVE MARRIAGES
-            # ------------------------------------------------
-
-            saved_marriages = []
-
-            for marriage_form in marriage_formset:
-
-                if not marriage_form.cleaned_data:
-                    continue
-
-                if marriage_form.cleaned_data.get(
-                    "DELETE"
-                ):
-                    continue
-
-                spouse_name = (
-                    marriage_form.cleaned_data.get(
-                        "spouse_full_name"
-                    )
-                    or ""
-                ).strip()
-
-                marriage_date = (
-                    marriage_form.cleaned_data.get(
-                        "date_of_marriage"
-                    )
-                )
+            with transaction.atomic():
 
                 # --------------------------------------------
-                # Ignore completely empty form
+                # SAVE MEMBER
                 # --------------------------------------------
 
-                if not spouse_name and not marriage_date:
-                    continue
+                member = form.save()
 
                 # --------------------------------------------
-                # CREATE MARRIAGE LIFE EVENT
+                # SAVE MARRIAGES
                 # --------------------------------------------
 
-                marriage_event = LifeEvent.objects.create(
-                    member=member,
-                    event_type="MARRIAGE",
-                    event_date=marriage_date,
-                )
+                saved_marriages = []
 
-                # --------------------------------------------
-                # CREATE MARRIAGE DETAILS
-                # --------------------------------------------
+                for marriage_form in marriage_formset:
 
-                marriage = marriage_form.save(
-                    commit=False
-                )
-
-                marriage.member = member
-                marriage.life_event = marriage_event
-
-                marriage.save()
-
-                saved_marriages.append(
-                    marriage
-                )
-
-            # ------------------------------------------------
-            # SAVE INITIAL DIVORCES
-            # ------------------------------------------------
-
-            if marital_status == "DIVORCED":
-
-                for divorce_form in divorce_formset:
-
-                    if not divorce_form.cleaned_data:
+                    if not marriage_form.cleaned_data:
                         continue
 
-                    marriage_index = (
-                        divorce_form.cleaned_data.get(
-                            "marriage_index"
-                        )
-                    )
-
-                    divorce_date = (
-                        divorce_form.cleaned_data.get(
-                            "date_of_divorce"
-                        )
-                    )
-
-                    if (
-                        marriage_index is None
-                        or not divorce_date
+                    if marriage_form.cleaned_data.get(
+                        "DELETE"
                     ):
                         continue
 
-                    # ----------------------------------------
-                    # Make sure the supplied marriage index
-                    # points to an actual saved marriage.
-                    # ----------------------------------------
-
-                    if (
-                        marriage_index < 0
-                        or marriage_index >= len(
-                            saved_marriages
+                    spouse_name = (
+                        marriage_form.cleaned_data.get(
+                            "spouse_full_name"
                         )
-                    ):
+                        or ""
+                    ).strip()
+
+                    marriage_date = (
+                        marriage_form.cleaned_data.get(
+                            "date_of_marriage"
+                        )
+                    )
+
+                    if not spouse_name and not marriage_date:
                         continue
 
-                    marriage = saved_marriages[
-                        marriage_index
-                    ]
-
-                    # ----------------------------------------
-                    # CREATE DIVORCE LIFE EVENT
-                    # ----------------------------------------
-
-                    divorce_event = LifeEvent.objects.create(
+                    marriage_event = LifeEvent.objects.create(
                         member=member,
-                        event_type="DIVORCE",
-                        event_date=divorce_date,
+                        event_type="MARRIAGE",
+                        event_date=marriage_date,
                     )
 
-                    # ----------------------------------------
-                    # CREATE DIVORCE DETAILS
-                    # ----------------------------------------
-
-                    DivorceDetails.objects.create(
-                        marriage=marriage,
-                        life_event=divorce_event,
-                        date_of_divorce=divorce_date,
+                    marriage = marriage_form.save(
+                        commit=False
                     )
 
-            # ------------------------------------------------
-            # SUCCESS
-            # ------------------------------------------------
+                    marriage.member = member
+                    marriage.life_event = marriage_event
 
-            messages.success(
+                    marriage.save()
+
+                    saved_marriages.append(
+                        marriage
+                    )
+
+                # --------------------------------------------
+                # SAVE INITIAL DIVORCES
+                # --------------------------------------------
+
+                if marital_status == "DIVORCED":
+
+                    for divorce_form in divorce_formset:
+
+                        if not divorce_form.cleaned_data:
+                            continue
+
+                        marriage_index = (
+                            divorce_form.cleaned_data.get(
+                                "marriage_index"
+                            )
+                        )
+
+                        divorce_date = (
+                            divorce_form.cleaned_data.get(
+                                "date_of_divorce"
+                            )
+                        )
+
+                        if (
+                            marriage_index is None
+                            or not divorce_date
+                        ):
+                            continue
+
+                        if (
+                            marriage_index < 0
+                            or marriage_index >= len(
+                                saved_marriages
+                            )
+                        ):
+                            continue
+
+                        marriage = saved_marriages[
+                            marriage_index
+                        ]
+
+                        divorce_event = LifeEvent.objects.create(
+                            member=member,
+                            event_type="DIVORCE",
+                            event_date=divorce_date,
+                        )
+
+                        DivorceDetails.objects.create(
+                            marriage=marriage,
+                            life_event=divorce_event,
+                            date_of_divorce=divorce_date,
+                        )
+
+                # --------------------------------------------
+                # SUCCESS
+                # --------------------------------------------
+
+                messages.success(
+                    request,
+                    (
+                        f"Registry record for "
+                        f"{member.surname} "
+                        f"{member.firstname} "
+                        f"saved successfully as "
+                        f"{member.aut_id}."
+                    ),
+                )
+
+                return redirect(
+                    "view_registry",
+                    pk=member.pk,
+                )
+
+        else:
+            messages.error(
                 request,
-                (
-                    f"Registry record for "
-                    f"{member.surname} "
-                    f"{member.firstname} "
-                    f"saved successfully as "
-                    f"{member.aut_id}."
-                ),
-            )
-
-            return redirect(
-                "view_registry",
-                pk=member.pk,
+                "Please correct the errors highlighted below."
             )
 
     else:
-
-        # ----------------------------------------------------
-        # INITIAL PAGE LOAD
-        # ----------------------------------------------------
 
         form = RegistryForm()
 
@@ -387,10 +349,6 @@ def new_registry(request):
         divorce_formset = InitialDivorceFormSet(
             prefix="divorces",
         )
-
-    # --------------------------------------------------------
-    # PAGE CONTEXT
-    # --------------------------------------------------------
 
     context = {
         "form": form,
@@ -416,6 +374,8 @@ def global_sheet(request):
         or ""
     ).strip()
 
+    export_format = request.GET.get("export", "").strip().lower()
+
     records = (
         Registry.objects
         .all()
@@ -438,12 +398,73 @@ def global_sheet(request):
             | Q(family_root__icontains=search_query)
         )
 
+    # --------------------------------------------------------
+    # EXCEL / CSV EXPORT
+    # --------------------------------------------------------
+    if export_format in ["excel", "csv"]:
+        response = HttpResponse(content_type="text/csv; charset=utf-8")
+        response["Content-Disposition"] = 'attachment; filename="umuotuto_global_sheet.csv"'
+
+        # Write UTF-8 BOM for Microsoft Excel auto-encoding
+        response.write('\ufeff')
+
+        writer = csv.writer(response)
+        
+        # Header Row
+        writer.writerow([
+            "Registry ID",
+            "Surname",
+            "First Name",
+            "Middle Name",
+            "Nickname",
+            "Father's Name",
+            "Mother's Name",
+            "Family Root",
+            "Family Name",
+            "Gender",
+            "Marital Status",
+            "Date of Birth",
+            "Phone Number",
+            "Registration Date",
+        ])
+
+        for record in records:
+            # Safe Date of Birth formatting
+            dob = getattr(record, "date_of_birth", None)
+            dob_str = dob.strftime("%Y-%m-%d") if dob and hasattr(dob, "strftime") else (str(dob) if dob else "")
+
+            # Safe Registration Date formatting
+            reg_date = getattr(record, "aut_reg_date", None)
+            reg_date_str = reg_date.strftime("%Y-%m-%d %H:%M") if reg_date and hasattr(reg_date, "strftime") else (str(reg_date) if reg_date else "")
+
+            # Safe Choice Display
+            gender_str = record.get_gender_display() if hasattr(record, "get_gender_display") and getattr(record, "gender", None) else getattr(record, "gender", "")
+            root_str = record.get_family_root_display() if hasattr(record, "get_family_root_display") and getattr(record, "family_root", None) else getattr(record, "family_root", "")
+            marital_str = record.get_marital_status_display() if hasattr(record, "get_marital_status_display") and getattr(record, "marital_status", None) else getattr(record, "marital_status", "")
+
+            writer.writerow([
+                getattr(record, "aut_id", ""),
+                getattr(record, "surname", ""),
+                getattr(record, "firstname", ""),
+                getattr(record, "middlename", "") or "",
+                getattr(record, "nickname", "") or "",
+                getattr(record, "immediate_fathers_name", "") or "",
+                getattr(record, "mother_name", "") or "",
+                root_str or "",
+                getattr(record, "family_name", "") or "",
+                gender_str or "",
+                marital_str or "",
+                dob_str,
+                getattr(record, "phone_number", "") or "",
+                reg_date_str,
+            ])
+
+        return response
+
     context = {
         "total_records": Registry.objects.count(),
         "records": records,
-        "members": records,
         "search_query": search_query,
-        "query": search_query,
     }
 
     return render(
@@ -494,6 +515,12 @@ def life_events(request):
         or ""
     ).strip()
 
+    event_type_filter = (
+        request.GET.get("type")
+        or request.GET.get("event_type")
+        or ""
+    ).strip().upper()
+
     events = (
         LifeEvent.objects
         .select_related("member")
@@ -502,6 +529,12 @@ def life_events(request):
             "-id",
         )
     )
+
+    if event_type_filter:
+        if "NAME" in event_type_filter:
+            events = events.filter(event_type__icontains="NAME")
+        else:
+            events = events.filter(event_type=event_type_filter)
 
     if query:
         events = events.filter(
@@ -515,7 +548,7 @@ def life_events(request):
     context = {
         "events": events,
         "query": query,
-        "search_query": query,
+        "event_type_filter": event_type_filter,
     }
 
     return render(
@@ -546,10 +579,6 @@ def new_life_event(request):
         )
     )
 
-    # --------------------------------------------------------
-    # SEARCH MEMBERS
-    # --------------------------------------------------------
-
     if search_query:
         search_terms = search_query.split()
 
@@ -573,10 +602,6 @@ def new_life_event(request):
     details_form = None
     selected_event_type = ""
 
-    # --------------------------------------------------------
-    # GET PARAMETERS
-    # --------------------------------------------------------
-
     member_id = request.GET.get("member", "")
 
     event_type = (
@@ -592,10 +617,6 @@ def new_life_event(request):
         except Registry.DoesNotExist:
             selected_member = None
 
-    # ========================================================
-    # POST
-    # ========================================================
-
     if request.method == "POST":
 
         member_id = request.POST.get("member", "")
@@ -605,23 +626,11 @@ def new_life_event(request):
             .upper()
         )
 
-        # ----------------------------------------------------
-        # Get selected member
-        # ----------------------------------------------------
-
         if member_id:
             selected_member = get_object_or_404(
                 Registry,
                 pk=member_id,
             )
-
-        # ----------------------------------------------------
-        # MAIN LIFE EVENT FORM
-        #
-        # Marriage and Divorce have their own date fields.
-        # Copy that date into event_date before Django builds
-        # the LifeEvent form.
-        # ----------------------------------------------------
 
         life_event_post = request.POST.copy()
 
@@ -648,10 +657,6 @@ def new_life_event(request):
             life_event_form.instance.event_type = (
                 selected_event_type
             )
-
-        # ----------------------------------------------------
-        # EVENT-SPECIFIC FORM
-        # ----------------------------------------------------
 
         if selected_event_type == "MARRIAGE":
 
@@ -680,18 +685,10 @@ def new_life_event(request):
 
             details_form = name_change_form    
 
-        # ====================================================
-        # VALIDATION
-        # ====================================================
-
         details_valid = True
 
         if details_form is not None:
             details_valid = details_form.is_valid()
-
-        # ----------------------------------------------------
-        # Marriage date becomes LifeEvent date
-        # ----------------------------------------------------
 
         if (
             selected_event_type == "MARRIAGE"
@@ -703,10 +700,6 @@ def new_life_event(request):
                 )
             )
 
-        # ----------------------------------------------------
-        # Divorce date becomes LifeEvent date
-        # ----------------------------------------------------
-
         elif (
             selected_event_type == "DIVORCE"
             and details_valid
@@ -717,17 +710,9 @@ def new_life_event(request):
                 )
             )
 
-        # ----------------------------------------------------
-        # Validate LifeEvent AFTER its date is available.
-        # ----------------------------------------------------
-
         life_event_valid = (
             life_event_form.is_valid()
         )
-
-        # ====================================================
-        # SAVE ONLY IF EVERYTHING IS VALID
-        # ====================================================
 
         if (
             selected_member
@@ -735,18 +720,7 @@ def new_life_event(request):
             and details_valid
         ):
 
-            # ------------------------------------------------
-            # ATOMIC TRANSACTION
-            #
-            # If anything fails during saving, Django rolls
-            # everything back.
-            # ------------------------------------------------
-
             with transaction.atomic():
-
-                # --------------------------------------------
-                # SAVE LIFE EVENT
-                # --------------------------------------------
 
                 life_event = life_event_form.save(
                     commit=False
@@ -757,10 +731,6 @@ def new_life_event(request):
                     selected_event_type
                 )
 
-                # --------------------------------------------
-                # Marriage date
-                # --------------------------------------------
-
                 if selected_event_type == "MARRIAGE":
 
                     life_event.event_date = (
@@ -768,10 +738,6 @@ def new_life_event(request):
                             "date_of_marriage"
                         )
                     )
-
-                # --------------------------------------------
-                # Divorce date
-                # --------------------------------------------
 
                 elif selected_event_type == "DIVORCE":
 
@@ -782,10 +748,6 @@ def new_life_event(request):
                     )
 
                 life_event.save()
-
-                # --------------------------------------------
-                # SAVE MARRIAGE DETAILS
-                # --------------------------------------------
 
                 if selected_event_type == "MARRIAGE":
 
@@ -798,10 +760,6 @@ def new_life_event(request):
 
                     marriage.save()
 
-                # --------------------------------------------
-                # SAVE DIVORCE DETAILS
-                # --------------------------------------------
-
                 elif selected_event_type == "DIVORCE":
 
                     divorce = divorce_form.save(
@@ -811,10 +769,6 @@ def new_life_event(request):
                     divorce.life_event = life_event
 
                     divorce.save()
-
-                # --------------------------------------------
-                # SAVE NAME CHANGE DETAILS
-                # --------------------------------------------
 
                 elif selected_event_type == "NAME_CHANGE":
 
@@ -845,7 +799,6 @@ def new_life_event(request):
 
                     name_change.save()
 
-                    # Optionally update the registry member's fields if submitted
                     new_surname = name_change_form.cleaned_data.get("new_surname")
                     new_firstname = name_change_form.cleaned_data.get("new_firstname")
                     new_middlename = name_change_form.cleaned_data.get("new_middlename")
@@ -858,10 +811,6 @@ def new_life_event(request):
                         if new_middlename is not None:
                             selected_member.middlename = new_middlename
                         selected_member.save()
-
-                # --------------------------------------------
-                # SUCCESS
-                # --------------------------------------------
 
                 messages.success(
                     request,
@@ -878,9 +827,11 @@ def new_life_event(request):
                 pk=life_event.pk,
             )
 
-    # ========================================================
-    # GET
-    # ========================================================
+        else:
+            messages.error(
+                request,
+                "Please correct the errors highlighted below."
+            )
 
     else:
 
@@ -915,10 +866,6 @@ def new_life_event(request):
             selected_event_type = "NAME_CHANGE"
             details_form = name_change_form
 
-    # ========================================================
-    # CONTEXT
-    # ========================================================
-
     context = {
         "members": members,
         "selected_member": selected_member,
@@ -929,7 +876,6 @@ def new_life_event(request):
         "divorce_form": divorce_form,
         "name_change_form": name_change_form,
         "query": search_query,
-        "search_query": search_query,
     }
 
     return render(

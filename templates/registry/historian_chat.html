@@ -2,23 +2,23 @@
 
 {% block content %}
 <style>
-  /* WhatsApp Container */
+  /* Chat Container */
   .wa-container {
     max-width: 900px;
     margin: 10px auto;
     height: 82vh;
     display: flex;
     flex-direction: column;
-    background-color: #efeae2;
+    background-color: #f8f6fa;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 20px rgba(75, 31, 122, 0.12);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
 
   /* Header */
   .wa-header {
-    background-color: #075e54;
+    background-color: var(--purple, #4B1F7A);
     color: #ffffff;
     padding: 10px 16px;
     display: flex;
@@ -37,7 +37,7 @@
   .wa-avatar {
     width: 42px;
     height: 42px;
-    background-color: #128c7e;
+    background-color: rgba(255, 255, 255, 0.2);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -45,12 +45,12 @@
     font-weight: bold;
     font-size: 18px;
     color: #ffffff;
-    border: 2px solid #ffffff;
+    border: 2px solid rgba(255, 255, 255, 0.4);
   }
 
   .wa-status {
     font-size: 12px;
-    color: #25d366;
+    color: #00ff66;
     display: flex;
     align-items: center;
     gap: 4px;
@@ -59,8 +59,9 @@
   .wa-status-dot {
     width: 8px;
     height: 8px;
-    background-color: #25d366;
+    background-color: #00ff66;
     border-radius: 50%;
+    box-shadow: 0 0 6px #00ff66;
     display: inline-block;
   }
 
@@ -93,20 +94,21 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    background-image: radial-gradient(#cbd5e1 1px, transparent 0);
+    background-image: radial-gradient(#d3c5e5 1px, transparent 0);
     background-size: 16px 16px;
     scroll-behavior: smooth;
   }
 
   .wa-date-divider {
     align-self: center;
-    background-color: rgba(255, 255, 255, 0.95);
-    color: #54656f;
+    background-color: #ffffff;
+    color: var(--purple, #4B1F7A);
+    border: 1px solid #e2d6eb;
     font-size: 11px;
     font-weight: 600;
     padding: 5px 12px;
     border-radius: 8px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     margin: 8px 0;
     text-transform: uppercase;
   }
@@ -119,21 +121,23 @@
     position: relative;
     font-size: 14.5px;
     line-height: 1.45;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
   }
 
   .wa-message.user {
     align-self: flex-end;
-    background-color: #dcf8c6;
-    color: #111b21;
+    background-color: #e8dcf5;
+    color: #230c3a;
     border-radius: 10px 0px 10px 10px;
     padding: 8px 12px;
+    border: 1px solid #d8c5ee;
   }
 
   .wa-message.bot {
     align-self: flex-start;
     background-color: #ffffff;
-    color: #111b21;
+    color: #1e293b;
+    border: 1px solid #e2d6eb;
     border-radius: 0px 10px 10px 10px;
     padding: 10px 14px;
   }
@@ -141,7 +145,7 @@
   .wa-sender-name {
     font-size: 12px;
     font-weight: bold;
-    color: #075e54;
+    color: var(--purple, #4B1F7A);
     margin-bottom: 4px;
   }
 
@@ -152,7 +156,7 @@
 
   .wa-timestamp {
     font-size: 10.5px;
-    color: #667781;
+    color: #64748b;
     align-self: flex-end;
     margin-top: 4px;
   }
@@ -163,14 +167,14 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
-    border-top: 1px dashed #e2e8f0;
+    border-top: 1px dashed #e2d6eb;
     padding-top: 8px;
   }
 
   .wa-card {
-    background-color: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-left: 4px solid #128c7e;
+    background-color: #fcfaff;
+    border: 1px solid #e2d6eb;
+    border-left: 4px solid var(--purple, #4B1F7A);
     border-radius: 6px;
     padding: 8px 12px;
     display: flex;
@@ -183,7 +187,7 @@
   }
 
   .wa-card:hover {
-    background-color: #f1f5f9;
+    background-color: #f3ebf9;
   }
 
   .wa-card-name {
@@ -201,16 +205,16 @@
     display: flex;
     gap: 8px;
     padding: 8px 16px;
-    background-color: #f0f2f5;
+    background-color: #f3eff8;
     overflow-x: auto;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid #e2d6eb;
     white-space: nowrap;
   }
 
   .wa-chip {
     background: #ffffff;
-    border: 1px solid #cbd5e1;
-    color: #075e54;
+    border: 1px solid #d3c5e5;
+    color: var(--purple, #4B1F7A);
     padding: 5px 12px;
     border-radius: 16px;
     font-size: 12.5px;
@@ -219,18 +223,19 @@
   }
 
   .wa-chip:hover {
-    background: #075e54;
+    background: var(--purple, #4B1F7A);
     color: #ffffff;
-    border-color: #075e54;
+    border-color: var(--purple, #4B1F7A);
   }
 
   /* Footer / Input Area */
   .wa-footer {
-    background-color: #f0f2f5;
+    background-color: #f3eff8;
     padding: 10px 16px;
     display: flex;
     align-items: center;
     gap: 10px;
+    border-top: 1px solid #e2d6eb;
   }
 
   .wa-input-form {
@@ -243,19 +248,24 @@
   .wa-input {
     flex: 1;
     background-color: #ffffff;
-    border: none;
+    border: 1px solid #e2d6eb;
     outline: none;
     padding: 12px 18px;
     border-radius: 24px;
     font-size: 14.5px;
     color: #111b21;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: border-color 0.2s ease;
+  }
+
+  .wa-input:focus {
+    border-color: var(--purple, #4B1F7A);
   }
 
   .wa-send-btn {
     width: 44px;
     height: 44px;
-    background-color: #00a884;
+    background-color: var(--purple, #4B1F7A);
     color: #ffffff;
     border: none;
     border-radius: 50%;
@@ -263,12 +273,13 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-    transition: background-color 0.2s ease;
+    box-shadow: 0 2px 4px rgba(75, 31, 122, 0.25);
+    transition: background-color 0.2s ease, transform 0.1s ease;
   }
 
   .wa-send-btn:hover {
-    background-color: #008f6f;
+    background-color: #38165c;
+    transform: scale(1.03);
   }
 
   /* Typing Animation */
@@ -276,9 +287,10 @@
     display: none;
     align-self: flex-start;
     background-color: #ffffff;
+    border: 1px solid #e2d6eb;
     padding: 10px 16px;
     border-radius: 0 10px 10px 10px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
   }
 
   .typing-dot {
@@ -286,7 +298,7 @@
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background-color: #8696a0;
+    background-color: #9c80b8;
     margin-right: 3px;
     animation: typing 1.4s infinite ease-in-out both;
   }
@@ -308,7 +320,8 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(18, 10, 28, 0.75);
+    backdrop-filter: blur(5px);
     z-index: 1000;
     align-items: center;
     justify-content: center;
@@ -320,7 +333,8 @@
     max-width: 500px;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    border: 1px solid #e2d6eb;
     animation: modalSlide 0.25s ease-out;
   }
 
@@ -330,7 +344,7 @@
   }
 
   .wa-modal-header {
-    background-color: #075e54;
+    background-color: var(--purple, #4B1F7A);
     color: #ffffff;
     padding: 12px 18px;
     display: flex;
@@ -355,13 +369,13 @@
 
   .wa-modal-footer {
     padding: 12px 16px;
-    background-color: #f8fafc;
-    border-top: 1px solid #e2e8f0;
+    background-color: #f8f6fa;
+    border-top: 1px solid #e2d6eb;
     text-align: right;
   }
 
   .wa-modal-btn {
-    background-color: #128c7e;
+    background-color: var(--purple, #4B1F7A);
     color: white;
     padding: 6px 16px;
     border: none;
@@ -369,11 +383,16 @@
     text-decoration: none;
     font-size: 13px;
     display: inline-block;
+    transition: background 0.2s ease;
+  }
+
+  .wa-modal-btn:hover {
+    background-color: #38165c;
   }
 </style>
 
 <div class="wa-container">
-  <!-- WhatsApp Header -->
+  <!-- Header -->
   <div class="wa-header">
     <div class="wa-header-info">
       <div class="wa-avatar">UH</div>
@@ -431,7 +450,7 @@ Ask me questions about:
                   <div class="wa-card-name">{{ member.name }}</div>
                   <div class="wa-card-id">Registry ID: {{ member.aut_id }}</div>
                 </div>
-                <span style="font-size: 12px; color: #128c7e; font-weight: bold;">Quick View →</span>
+                <span style="font-size: 12px; color: var(--purple, #4B1F7A); font-weight: bold;">Quick View →</span>
               </div>
             {% endfor %}
           </div>
@@ -458,7 +477,7 @@ Ask me questions about:
     <div class="wa-chip" onclick="sendQuickPrompt('How many marriage records are there?')">Marriage records</div>
   </div>
 
-  <!-- WhatsApp Input Bar -->
+  <!-- Input Bar -->
   <div class="wa-footer">
     <form method="POST" action="{% url 'historian_chat' %}" class="wa-input-form" id="historian-form">
       {% csrf_token %}
@@ -584,7 +603,7 @@ Ask me questions about:
             <div class="wa-card-name">${escapeHtml(m.name)}</div>
             <div class="wa-card-id">Registry ID: ${escapeHtml(m.aut_id)}</div>
           </div>
-          <span style="font-size: 12px; color: #128c7e; font-weight: bold;">Quick View →</span>
+          <span style="font-size: 12px; color: var(--purple, #4B1F7A); font-weight: bold;">Quick View →</span>
         `;
         cardsDiv.appendChild(card);
       });
@@ -632,7 +651,7 @@ Ask me questions about:
   async function openMemberModal(id, name, autId) {
     modalName.innerText = `${name} (${autId})`;
     modalBody.innerHTML = '<p style="color: #64748b;">Loading details...</p>';
-    modalLink.href = `/registry/member/${id}/`; // Update to match your actual view URL pattern
+    modalLink.href = `/registry/member/${id}/`;
     modal.style.display = 'flex';
 
     try {

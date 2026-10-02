@@ -58,18 +58,43 @@
         flex-wrap: wrap;
     }
 
-    /* Side Logo Styling (Rounded Circle) */
-    .dashboard-intro-logo img {
-        width: 110px;
-        height: 110px;
-        object-fit: cover;
-        border-radius: 50%;
-        filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.25));
-        transition: transform 0.2s ease;
+    /* Hero Quick Search Bar */
+    .dashboard-hero-search {
+        margin-top: 16px;
+        display: flex;
+        gap: 8px;
+        max-width: 480px;
     }
 
-    .dashboard-intro-logo img:hover {
-        transform: scale(1.04);
+    .dashboard-hero-search input {
+        flex: 1;
+        padding: 10px 14px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.12);
+        color: inherit;
+        font-size: 13px;
+        outline: none;
+    }
+
+    .dashboard-hero-search input::placeholder {
+        color: rgba(255, 255, 255, 0.65);
+    }
+
+    .dashboard-hero-search button {
+        padding: 10px 18px;
+        border-radius: 8px;
+        border: none;
+        background: var(--purple, #4B1F7A);
+        color: #fff;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+    .dashboard-hero-search button:hover {
+        opacity: 0.9;
     }
 
     /* Blended TV Widget Frame */
@@ -175,7 +200,7 @@
     }
 
     /* =========================================================
-       ONE-LINE COMPRESSED STATS ROW
+       ONE-LINE COMPRESSED STATS ROW & INTERACTIVE CARDS
     ========================================================= */
 
     .dashboard-stats {
@@ -183,6 +208,18 @@
         grid-template-columns: repeat(5, 1fr);
         gap: 12px;
         margin: 24px 0;
+    }
+
+    a.dashboard-stat-card {
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
+        transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+    }
+
+    a.dashboard-stat-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(255, 255, 255, 0.3);
     }
 
     .dashboard-stat-card {
@@ -212,8 +249,24 @@
         color: #d97706;
     }
 
-    .event-summary-dot.name-change {
-        background: #d97706;
+    .dashboard-stat-icon.family {
+        background: rgba(147, 51, 234, 0.15);
+        color: #a855f7;
+    }
+
+    /* Single-Line Family Root Breakdown Grid */
+    .family-root-stat-grid {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 12px;
+        margin-top: 16px;
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .family-root-stat-grid .dashboard-stat-card {
+        flex: 1;
+        min-width: 180px;
     }
 
     @media (max-width: 1100px) {
@@ -339,6 +392,19 @@
                 A centralized record of clan members, family lineage
                 and important historical life events.
             </p>
+
+            <!-- HERO QUICK MEMBER SEARCH -->
+            <form action="{% url 'global_sheet' %}" method="GET" class="dashboard-hero-search">
+                <input 
+                    type="text" 
+                    name="q" 
+                    placeholder="Search member name or AUT ID..." 
+                    aria-label="Search members"
+                />
+                <button type="submit">
+                    Search
+                </button>
+            </form>
         </div>
 
         <div class="dashboard-intro-side">
@@ -367,11 +433,6 @@
                         </p>
                     </div>
                 </div>
-            </div>
-
-            <!-- CLAN LOGO (RIGHT SIDE) -->
-            <div class="dashboard-intro-logo">
-                <img src="{% static 'images/umu.jpeg' %}" alt="Umuotuto Ofuobi Logo">
             </div>
         </div>
 
@@ -432,128 +493,88 @@
 
 
     <!-- =========================================
-         MAIN STATISTICS (SUMMARY CARDS - 1 LINE)
+         MAIN STATISTICS (CLICKABLE QUICK LINK CARDS)
          ========================================= -->
 
     <div class="dashboard-stats">
 
-        <div class="dashboard-stat-card">
-
+        <a href="{% url 'global_sheet' %}" class="dashboard-stat-card">
             <div class="dashboard-stat-icon members">
                 ♟
             </div>
-
             <div>
                 <span>Total Members</span>
-
                 <strong>
                     {{ total_members|default:"0" }}
                 </strong>
-
-                <small>
-                    Registered members
-                </small>
+                <small>Registered members</small>
             </div>
+        </a>
 
-        </div>
 
-
-        <div class="dashboard-stat-card">
-
+        <a href="{% url 'life_events' %}" class="dashboard-stat-card">
             <div class="dashboard-stat-icon events">
                 ◷
             </div>
-
             <div>
                 <span>Life Events</span>
-
                 <strong>
                     {{ total_events|default:"0" }}
                 </strong>
-
-                <small>
-                    Historical records
-                </small>
+                <small>Historical records</small>
             </div>
+        </a>
 
-        </div>
 
-
-        <div class="dashboard-stat-card">
-
+        <a href="{% url 'life_events' %}?type=MARRIAGE" class="dashboard-stat-card">
             <div class="dashboard-stat-icon marriage">
                 ♡
             </div>
-
             <div>
                 <span>Marriages</span>
-
                 <strong>
                     {{ total_marriages|default:"0" }}
                 </strong>
-
-                <small>
-                    Marriage records
-                </small>
+                <small>Marriage records</small>
             </div>
+        </a>
 
-        </div>
 
-
-        <div class="dashboard-stat-card">
-
+        <a href="{% url 'life_events' %}?type=NAME_CHANGE" class="dashboard-stat-card">
             <div class="dashboard-stat-icon name-change">
                 ✎
             </div>
-
             <div>
                 <span>Name Changes</span>
-
                 <strong>
                     {{ total_name_changes|default:"0" }}
                 </strong>
-
-                <small>
-                    Name change records
-                </small>
+                <small>Name change records</small>
             </div>
+        </a>
 
-        </div>
 
-
-        <div class="dashboard-stat-card">
-
+        <a href="{% url 'life_events' %}?type=DEATH" class="dashboard-stat-card">
             <div class="dashboard-stat-icon death">
                 †
             </div>
-
             <div>
                 <span>Deaths</span>
-
                 <strong>
                     {{ total_deaths|default:"0" }}
                 </strong>
-
-                <small>
-                    Recorded deaths
-                </small>
+                <small>Recorded deaths</small>
             </div>
-
-        </div>
+        </a>
 
     </div>
 
 
     <!-- =========================================
-         DASHBOARD GRID
+         FAMILY STRUCTURE (SINGLE LINE STAT-CARD LAYOUT)
          ========================================= -->
 
     <div class="dashboard-grid">
-
-
-        <!-- =====================================
-             FAMILY ROOT BREAKDOWN
-             ===================================== -->
 
         <div class="dashboard-card">
 
@@ -576,26 +597,19 @@
             </div>
 
 
-            <div class="family-root-list">
+            <div class="family-root-stat-grid">
 
                 {% for family in family_root_counts %}
 
-                    <div class="family-root-row">
-
-                        <div class="family-root-name">
-
-                            <span class="family-root-dot"></span>
-
-                            <strong>
-                                {{ family.label }}
-                            </strong>
-
+                    <div class="dashboard-stat-card">
+                        <div class="dashboard-stat-icon family">
+                            ◈
                         </div>
-
-                        <span class="family-root-count">
-                            {{ family.count }}
-                        </span>
-
+                        <div>
+                            <span>{{ family.label }}</span>
+                            <strong>{{ family.count|default:"0" }}</strong>
+                            <small>Family root members</small>
+                        </div>
                     </div>
 
                 {% empty %}
@@ -607,102 +621,6 @@
                 {% endfor %}
 
             </div>
-
-        </div>
-
-
-        <!-- =====================================
-             EVENT SUMMARY
-             ===================================== -->
-
-        <div class="dashboard-card">
-
-            <div class="dashboard-card-header">
-
-                <div>
-                    <p class="section-kicker">
-                        CLAN HISTORY
-                    </p>
-
-                    <h2>
-                        Life Event Summary
-                    </h2>
-                </div>
-
-                <span class="dashboard-card-icon">
-                    ◷
-                </span>
-
-            </div>
-
-
-            <div class="event-summary-list">
-
-                <div class="event-summary-row">
-
-                    <span class="event-summary-label">
-                        <i class="event-summary-dot marriage"></i>
-                        Marriage
-                    </span>
-
-                    <strong>
-                        {{ total_marriages|default:"0" }}
-                    </strong>
-
-                </div>
-
-
-                <div class="event-summary-row">
-
-                    <span class="event-summary-label">
-                        <i class="event-summary-dot divorce"></i>
-                        Divorce
-                    </span>
-
-                    <strong>
-                        {{ total_divorces|default:"0" }}
-                    </strong>
-
-                </div>
-
-
-                <div class="event-summary-row">
-
-                    <span class="event-summary-label">
-                        <i class="event-summary-dot name-change"></i>
-                        Name Change
-                    </span>
-
-                    <strong>
-                        {{ total_name_changes|default:"0" }}
-                    </strong>
-
-                </div>
-
-
-                <div class="event-summary-row">
-
-                    <span class="event-summary-label">
-                        <i class="event-summary-dot death"></i>
-                        Death
-                    </span>
-
-                    <strong>
-                        {{ total_deaths|default:"0" }}
-                    </strong>
-
-                </div>
-
-            </div>
-
-
-            <a
-                href="{% url 'life_events' %}"
-                class="dashboard-card-link"
-            >
-                View Life Events
-                <span>→</span>
-            </a>
 
         </div>
 
@@ -912,11 +830,17 @@
      EXPANDED STORY MODAL
      ========================================= -->
 
-<div class="history-modal-overlay" id="historyModalOverlay">
+<div 
+    class="history-modal-overlay" 
+    id="historyModalOverlay" 
+    role="dialog" 
+    aria-modal="true" 
+    aria-labelledby="historyModalTitle"
+>
     <div class="history-modal">
         <div class="history-modal-header">
-            <h2>Clan History &amp; Background</h2>
-            <button type="button" class="history-modal-close" id="closeHistoryModal">✕</button>
+            <h2 id="historyModalTitle">Clan History &amp; Background</h2>
+            <button type="button" class="history-modal-close" id="closeHistoryModal" aria-label="Close modal">✕</button>
         </div>
         <div class="history-modal-body" id="expandedStoryText">
             <!-- Full story populates here -->
@@ -933,18 +857,27 @@
         const expandedStoryText = document.getElementById("expandedStoryText");
         const closeHistoryModal = document.getElementById("closeHistoryModal");
 
-        tvWidget.addEventListener("click", function () {
+        function openModal() {
             expandedStoryText.innerHTML = tvStoryContent.innerHTML;
             historyModalOverlay.classList.add("active");
-        });
+        }
 
-        closeHistoryModal.addEventListener("click", function () {
+        function closeModal() {
             historyModalOverlay.classList.remove("active");
-        });
+        }
+
+        tvWidget.addEventListener("click", openModal);
+        closeHistoryModal.addEventListener("click", closeModal);
 
         historyModalOverlay.addEventListener("click", function (e) {
             if (e.target === historyModalOverlay) {
-                historyModalOverlay.classList.remove("active");
+                closeModal();
+            }
+        });
+
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && historyModalOverlay.classList.contains("active")) {
+                closeModal();
             }
         });
     });
