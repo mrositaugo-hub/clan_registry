@@ -1,6 +1,7 @@
 from django.db import transaction
 from django.contrib import messages
 from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import (
@@ -987,6 +988,11 @@ def historian_chat(request):
         [],
     )
 
+    is_ajax = (
+        request.headers.get("x-requested-with") == "XMLHttpRequest"
+        or request.META.get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest"
+    )
+
     if request.method == "POST":
 
         question = request.POST.get(
@@ -1027,6 +1033,31 @@ def historian_chat(request):
                 "historian_chat_history"
             ] = history[-50:]
 
+            if is_ajax:
+                chips = [
+                    "How many female members are registered?",
+                    "How many married members are registered?",
+                    "Who is the oldest living member?",
+                    "Umunangwu lineage",
+                    "How many marriage records are there?",
+                ]
+                return JsonResponse(
+                    {
+                        "success": True,
+                        "answer": answer,
+                        "results": result_cards,
+                        "chips": chips,
+                    }
+                )
+
+        elif is_ajax:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Please enter a valid question.",
+                }
+            )
+
     return render(
         request,
         "registry/historian_chat.html",
@@ -1037,6 +1068,51 @@ def historian_chat(request):
             )
         },
     )
+
+
+# ============================================================
+# MEMBER SUMMARY API (FOR HISTORIAN CHAT QUICK VIEW)
+# ============================================================
+
+def member_summary(request, pk):
+    member = get_object_or_404(Registry, pk=pk)
+
+    gender = (
+        member.get_gender_display()
+        if hasattr(member, "get_gender_display")
+        else getattr(member, "gender", "N/A")
+    )
+
+    marital_status = (
+        member.get_marital_status_display()
+        if hasattr(member, "get_marital_status_display")
+        else getattr(member, "marital_status", "N/A")
+    )
+
+    name_components = [
+        getattr(member, "surname", ""),
+        getattr(member, "firstname", ""),
+        getattr(member, "middlename", ""),
+    ]
+    full_name = " ".join([n for n in name_components if n]).strip()
+
+    lineage = (
+        getattr(member, "family_root", "")
+        or getattr(member, "family_name", "")
+        or "N/A"
+    )
+
+    data = {
+        "id": member.pk,
+        "aut_id": getattr(member, "aut_id", ""),
+        "name": full_name or "N/A",
+        "gender": gender or "N/A",
+        "lineage": lineage,
+        "marital_status": marital_status or "N/A",
+        "father_name": getattr(member, "immediate_fathers_name", "") or "N/A",
+    }
+
+    return JsonResponse(data)
 
 
 # ============================================================

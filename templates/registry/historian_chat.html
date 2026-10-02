@@ -41,7 +41,6 @@
     border-radius: 50%;
     display: flex;
     align-items: center;
-    justify-content: justify-content;
     justify-content: center;
     font-weight: bold;
     font-size: 18px;
@@ -65,18 +64,25 @@
     display: inline-block;
   }
 
-  .wa-header-actions a {
+  .wa-header-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .wa-header-actions button, .wa-header-actions a {
     color: #ffffff;
     text-decoration: none;
-    font-size: 13px;
+    font-size: 12.5px;
     background: rgba(255, 255, 255, 0.15);
     padding: 6px 12px;
+    border: none;
     border-radius: 20px;
+    cursor: pointer;
     transition: background 0.2s ease;
   }
 
-  .wa-header-actions a:hover {
-    background: rgba(255, 255, 255, 0.25);
+  .wa-header-actions button:hover, .wa-header-actions a:hover {
+    background: rgba(255, 255, 255, 0.28);
   }
 
   /* Chat Body */
@@ -89,6 +95,7 @@
     gap: 12px;
     background-image: radial-gradient(#cbd5e1 1px, transparent 0);
     background-size: 16px 16px;
+    scroll-behavior: smooth;
   }
 
   .wa-date-divider {
@@ -171,6 +178,7 @@
     justify-content: space-between;
     text-decoration: none;
     color: #1e293b;
+    cursor: pointer;
     transition: background-color 0.15s ease;
   }
 
@@ -291,6 +299,77 @@
     0%, 80%, 100% { transform: scale(0); }
     40% { transform: scale(1); }
   }
+
+  /* Member Record Modal */
+  .wa-modal-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .wa-modal {
+    background: #ffffff;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    animation: modalSlide 0.25s ease-out;
+  }
+
+  @keyframes modalSlide {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .wa-modal-header {
+    background-color: #075e54;
+    color: #ffffff;
+    padding: 12px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+  }
+
+  .wa-modal-close {
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  .wa-modal-body {
+    padding: 16px;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  .wa-modal-footer {
+    padding: 12px 16px;
+    background-color: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    text-align: right;
+  }
+
+  .wa-modal-btn {
+    background-color: #128c7e;
+    color: white;
+    padding: 6px 16px;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 13px;
+    display: inline-block;
+  }
 </style>
 
 <div class="wa-container">
@@ -306,6 +385,7 @@
       </div>
     </div>
     <div class="wa-header-actions">
+      <button onclick="exportChatLog()" title="Export chat history">Export</button>
       <a href="?clear=1" onclick="return confirm('Clear chat history?');">Clear Chat</a>
     </div>
   </div>
@@ -318,18 +398,18 @@
     {% if not history %}
       <div class="wa-message bot">
         <div class="wa-sender-name">UMUOTUTO Historian</div>
-        <div class="wa-message-content">Greetings! I am the official UMUOTUTO Clan Historian. 
+        <div class="wa-message-content">Greetings! I am the official UMUOTUTO Clan Historian.
 
 Ask me questions about:
 • Member counts (e.g., 'How many female members are registered?')
-• Lineages (e.g., 'Umunagwu lineage')
+• Lineages (e.g., 'Umunangwu lineage')
 • Records (e.g., 'How many marriage records exist?')
 • Specific members by name or Registry ID.</div>
         <div class="wa-timestamp">Just now</div>
       </div>
     {% endif %}
 
-    <!-- Conversation Loop -->
+    <!-- Historic Conversation Loop -->
     {% for chat in history %}
       <!-- User Question -->
       <div class="wa-message user">
@@ -346,13 +426,13 @@ Ask me questions about:
         {% if chat.results %}
           <div class="wa-result-cards">
             {% for member in chat.results %}
-              <a href="{% url 'view_registry' member.id %}" class="wa-card">
+              <div onclick="openMemberModal('{{ member.id }}', '{{ member.name|escapejs }}', '{{ member.aut_id|escapejs }}')" class="wa-card">
                 <div>
                   <div class="wa-card-name">{{ member.name }}</div>
                   <div class="wa-card-id">Registry ID: {{ member.aut_id }}</div>
                 </div>
-                <span style="font-size: 12px; color: #128c7e; font-weight: bold;">View Record →</span>
-              </a>
+                <span style="font-size: 12px; color: #128c7e; font-weight: bold;">Quick View →</span>
+              </div>
             {% endfor %}
           </div>
         {% endif %}
@@ -369,12 +449,12 @@ Ask me questions about:
     </div>
   </div>
 
-  <!-- Quick Suggestion Chips -->
-  <div class="wa-quick-chips">
+  <!-- Quick Suggestion Chips Container -->
+  <div class="wa-quick-chips" id="quick-chips">
     <div class="wa-chip" onclick="sendQuickPrompt('How many female members are registered?')">Female members?</div>
     <div class="wa-chip" onclick="sendQuickPrompt('How many married members are registered?')">Married members?</div>
     <div class="wa-chip" onclick="sendQuickPrompt('Who is the oldest living member?')">Oldest living member?</div>
-    <div class="wa-chip" onclick="sendQuickPrompt('Umunagwu lineage')">Umunagwu lineage</div>
+    <div class="wa-chip" onclick="sendQuickPrompt('Umunangwu lineage')">Umunangwu lineage</div>
     <div class="wa-chip" onclick="sendQuickPrompt('How many marriage records are there?')">Marriage records</div>
   </div>
 
@@ -401,26 +481,207 @@ Ask me questions about:
   </div>
 </div>
 
+<!-- Member Quick View Modal -->
+<div class="wa-modal-backdrop" id="member-modal">
+  <div class="wa-modal">
+    <div class="wa-modal-header">
+      <span id="modal-member-name">Member Profile</span>
+      <button class="wa-modal-close" onclick="closeMemberModal()">&times;</button>
+    </div>
+    <div class="wa-modal-body" id="modal-member-body">
+      Loading profile details...
+    </div>
+    <div class="wa-modal-footer">
+      <a href="#" id="modal-full-profile-link" class="wa-modal-btn">Full Profile Page →</a>
+    </div>
+  </div>
+</div>
+
 <script>
-  // Auto-scroll chat body to bottom
   const chatBody = document.getElementById('chat-body');
+  const form = document.getElementById('historian-form');
+  const input = document.getElementById('question-input');
+  const typingIndicator = document.getElementById('typing-indicator');
+  const chipsContainer = document.getElementById('quick-chips');
+
+  // Initial Auto-scroll
   chatBody.scrollTop = chatBody.scrollHeight;
 
-  // Handle Form Submit Animation
-  const form = document.getElementById('historian-form');
-  const typingIndicator = document.getElementById('typing-indicator');
+  // Intercept Form Submit for AJAX
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const query = input.value.trim();
+    if (!query) return;
 
-  form.addEventListener('submit', function() {
-    typingIndicator.style.display = 'block';
-    chatBody.scrollTop = chatBody.scrollHeight;
+    // 1. Append User Message
+    appendMessage(query, 'user');
+    input.value = '';
+
+    // 2. Show Typing Animation & Scroll
+    showTyping(true);
+
+    try {
+      // 3. Send Async Request
+      const formData = new FormData(form);
+      formData.set('question', query);
+
+      const response = await fetch(form.action, {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+      showTyping(false);
+
+      if (data.success) {
+        // 4. Append Bot Message & Results
+        appendMessage(data.answer, 'bot', data.results);
+
+        // 5. Update Dynamic Chips if returned
+        if (data.chips && data.chips.length > 0) {
+          updateQuickChips(data.chips);
+        }
+      } else {
+        appendMessage(data.error || "Sorry, I couldn't process your request.", 'bot');
+      }
+    } catch (err) {
+      showTyping(false);
+      appendMessage("Network error. Please check your connection and try again.", 'bot');
+    }
   });
 
-  // Quick Prompt Filler & Auto-submit
+  // Render Dynamic Bubbles
+  function appendMessage(text, sender, results = null) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `wa-message ${sender}`;
+
+    if (sender === 'bot') {
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'wa-sender-name';
+      nameDiv.innerText = 'UMUOTUTO Historian';
+      msgDiv.appendChild(nameDiv);
+    }
+
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'wa-message-content';
+    contentDiv.innerText = text;
+    msgDiv.appendChild(contentDiv);
+
+    // Append Cards if results exist
+    if (results && results.length > 0) {
+      const cardsDiv = document.createElement('div');
+      cardsDiv.className = 'wa-result-cards';
+
+      results.forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'wa-card';
+        card.onclick = () => openMemberModal(m.id, m.name, m.aut_id);
+        card.innerHTML = `
+          <div>
+            <div class="wa-card-name">${escapeHtml(m.name)}</div>
+            <div class="wa-card-id">Registry ID: ${escapeHtml(m.aut_id)}</div>
+          </div>
+          <span style="font-size: 12px; color: #128c7e; font-weight: bold;">Quick View →</span>
+        `;
+        cardsDiv.appendChild(card);
+      });
+      msgDiv.appendChild(cardsDiv);
+    }
+
+    const timeDiv = document.createElement('div');
+    timeDiv.className = 'wa-timestamp';
+    timeDiv.innerText = sender === 'user' ? 'Sent' : 'Delivered';
+    msgDiv.appendChild(timeDiv);
+
+    // Insert before typing indicator
+    chatBody.insertBefore(msgDiv, typingIndicator);
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }
+
+  function showTyping(show) {
+    typingIndicator.style.display = show ? 'block' : 'none';
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }
+
+  // Quick Chips Actions
   function sendQuickPrompt(text) {
-    const input = document.getElementById('question-input');
     input.value = text;
     form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-    form.submit();
+  }
+
+  function updateQuickChips(chipsList) {
+    chipsContainer.innerHTML = '';
+    chipsList.forEach(text => {
+      const chip = document.createElement('div');
+      chip.className = 'wa-chip';
+      chip.innerText = text;
+      chip.onclick = () => sendQuickPrompt(text);
+      chipsContainer.appendChild(chip);
+    });
+  }
+
+  // Member Modal logic
+  const modal = document.getElementById('member-modal');
+  const modalName = document.getElementById('modal-member-name');
+  const modalBody = document.getElementById('modal-member-body');
+  const modalLink = document.getElementById('modal-full-profile-link');
+
+  async function openMemberModal(id, name, autId) {
+    modalName.innerText = `${name} (${autId})`;
+    modalBody.innerHTML = '<p style="color: #64748b;">Loading details...</p>';
+    modalLink.href = `/registry/member/${id}/`; // Update to match your actual view URL pattern
+    modal.style.display = 'flex';
+
+    try {
+      const res = await fetch(`/registry/api/member-summary/${id}/`);
+      if (res.ok) {
+        const details = await res.json();
+        modalBody.innerHTML = `
+          <p><strong>Registry ID:</strong> ${details.aut_id || autId}</p>
+          <p><strong>Full Name:</strong> ${details.name || name}</p>
+          <p><strong>Gender:</strong> ${details.gender || 'N/A'}</p>
+          <p><strong>Lineage:</strong> ${details.lineage || 'N/A'}</p>
+          <p><strong>Marital Status:</strong> ${details.marital_status || 'N/A'}</p>
+          <p><strong>Father:</strong> ${details.father_name || 'N/A'}</p>
+        `;
+      } else {
+        modalBody.innerHTML = `<p>Basic record retrieved for <strong>${escapeHtml(name)}</strong>. Click below to view full details.</p>`;
+      }
+    } catch (e) {
+      modalBody.innerHTML = `<p>Record: <strong>${escapeHtml(name)}</strong> (ID: ${escapeHtml(autId)})</p>`;
+    }
+  }
+
+  function closeMemberModal() {
+    modal.style.display = 'none';
+  }
+
+  // Export Chat Log to Text
+  function exportChatLog() {
+    const messages = document.querySelectorAll('.wa-message');
+    let log = "--- UMUOTUTO Clan Historian Chat Export ---\n\n";
+
+    messages.forEach(msg => {
+      const isUser = msg.classList.contains('user');
+      const sender = isUser ? "User" : "Historian";
+      const content = msg.querySelector('.wa-message-content')?.innerText || '';
+      log += `[${sender}]:\n${content}\n-----------------------------------\n`;
+    });
+
+    const blob = new Blob([log], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `UMUOTUTO_Historian_Chat_${new Date().toISOString().slice(0,10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function escapeHtml(text) {
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 </script>
 {% endblock %}
