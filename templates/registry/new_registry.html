@@ -10,6 +10,72 @@ NEW REGISTRY
 
 {% block content %}
 
+<style>
+    /* Responsive layout enhancements for mobile devices */
+    .immediate-father-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1.5fr 1.5fr;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .immediate-father-label {
+        margin: 0;
+        white-space: nowrap;
+    }
+
+    @media (max-width: 992px) {
+        .immediate-father-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .immediate-father-grid {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .immediate-father-label {
+            white-space: normal;
+        }
+
+        .form-progress {
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .form-progress .progress-line {
+            display: none;
+        }
+
+        .registry-intro {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .wizard-actions {
+            flex-direction: column-reverse;
+            gap: 12px;
+        }
+
+        .wizard-actions button,
+        .wizard-actions a {
+            width: 100%;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .marriage-card-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+    }
+</style>
+
 <div class="registry-page">
 
     <!-- =====================================
@@ -332,53 +398,43 @@ NEW REGISTRY
 
                 </div>
 
-<!-- IMMEDIATE FATHER -->
-<div class="form-field">
+                <!-- IMMEDIATE FATHER -->
+                <div class="form-field">
 
-    <div
-        style="
-            display: grid;
-            grid-template-columns: 1fr 1fr 1.5fr 1.5fr;
-            gap: 10px;
-            align-items: center;
-        "
-    >
+                    <div class="immediate-father-grid">
 
-        <!-- LABEL -->
-        <label
-            for="{{ form.immediate_father.id_for_label }}"
-            style="
-                margin: 0;
-                white-space: nowrap;
-            "
-        >
-            Immediate Father's Name
-        </label>
+                        <!-- LABEL -->
+                        <label
+                            for="{{ form.immediate_father.id_for_label }}"
+                            class="immediate-father-label"
+                        >
+                            Immediate Father's Name
+                        </label>
 
-        <!-- SEARCH -->
-        <input
-            type="text"
-            id="fatherSearch"
-            class="form-control"
-            placeholder="Search name or ID..."
-            autocomplete="off"
-        >
+                        <!-- SEARCH -->
+                        <input
+                            type="text"
+                            id="fatherSearch"
+                            class="form-control"
+                            placeholder="Search name or ID..."
+                            autocomplete="off"
+                        >
 
-        <!-- REGISTERED FATHER -->
-        <div>
-            {{ form.immediate_father }}
-            {{ form.immediate_father.errors }}
-        </div>
+                        <!-- REGISTERED FATHER -->
+                        <div>
+                            {{ form.immediate_father }}
+                            {{ form.immediate_father.errors }}
+                        </div>
 
-        <!-- MANUAL FATHER -->
-        <div>
-            {{ form.manual_immediate_father }}
-            {{ form.manual_immediate_father.errors }}
-        </div>
+                        <!-- MANUAL FATHER -->
+                        <div>
+                            {{ form.manual_immediate_father }}
+                            {{ form.manual_immediate_father.errors }}
+                        </div>
 
-    </div>
+                    </div>
 
-</div>
+                </div>
 
 
                 <!-- MOTHER NAME -->

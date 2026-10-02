@@ -13,6 +13,7 @@ Ancestry Map
 <style>
     .ancestry-page {
         width: 100%;
+        box-sizing: border-box;
     }
 
     /* =========================================================
@@ -23,7 +24,7 @@ Ancestry Map
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 20px;
+        gap: 16px;
         flex-wrap: wrap;
         margin-bottom: 22px;
     }
@@ -37,24 +38,31 @@ Ancestry Map
     .ancestry-header p {
         margin: 6px 0 0;
         color: #777;
+        font-size: 14px;
     }
 
     .map-actions {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
+        align-items: center;
     }
 
     .map-control {
         border: none;
         border-radius: 9px;
-        padding: 9px 14px;
+        padding: 10px 14px;
         cursor: pointer;
         font-weight: 700;
         font-size: 13px;
         background: var(--purple, #4B1F7A);
         color: white;
         transition: 0.2s ease;
+        min-height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        touch-action: manipulation;
     }
 
     .map-control:hover {
@@ -114,6 +122,7 @@ Ancestry Map
     .ancestry-sidebar h3 {
         margin: 0 0 15px;
         color: var(--purple, #4B1F7A);
+        font-size: 18px;
     }
 
     .ancestry-sidebar label {
@@ -134,6 +143,8 @@ Ancestry Map
         padding: 10px 11px;
         background: white;
         outline: none;
+        font-size: 14px;
+        min-height: 42px;
     }
 
     .ancestry-sidebar select:focus,
@@ -142,9 +153,15 @@ Ancestry Map
         box-shadow: 0 0 0 3px rgba(75, 31, 122, 0.08);
     }
 
-    .ancestry-stat {
+    .ancestry-stat-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
         margin-top: 16px;
-        padding: 13px;
+    }
+
+    .ancestry-stat {
+        padding: 12px;
         border-radius: 11px;
         background: #f8f3fb;
         border-left: 4px solid var(--purple, #4B1F7A);
@@ -152,26 +169,15 @@ Ancestry Map
 
     .ancestry-stat span {
         display: block;
-        font-size: 12px;
+        font-size: 11px;
         color: #777;
     }
 
     .ancestry-stat strong {
         display: block;
         margin-top: 2px;
-        font-size: 25px;
+        font-size: 22px;
         color: var(--purple, #4B1F7A);
-    }
-
-    .map-message {
-        margin-top: 17px;
-        padding: 12px;
-        border-radius: 9px;
-        background: #fff8e8;
-        border-left: 4px solid var(--bronze, #AC5D1A);
-        color: #6f4a13;
-        font-size: 13px;
-        line-height: 1.5;
     }
 
     /* =========================================================
@@ -207,11 +213,11 @@ Ancestry Map
         font-size: 13px;
     }
 
-    /* Fixed Viewport Height for Smooth 360° Panning */
+    /* Viewport with Smooth 360° Drag & Touch Panning */
     .map-scroll {
         width: 100%;
-        height: 700px;
-        max-height: 80vh;
+        height: 680px;
+        max-height: 75vh;
         overflow: auto;
         border: 1px solid #e3dce8;
         border-radius: 12px;
@@ -224,6 +230,7 @@ Ancestry Map
         background-size: 22px 22px;
         cursor: grab;
         position: relative;
+        -webkit-overflow-scrolling: touch;
     }
 
     .map-scroll:active {
@@ -290,7 +297,7 @@ Ancestry Map
 
     .map-legend {
         display: flex;
-        gap: 16px;
+        gap: 12px 16px;
         flex-wrap: wrap;
         margin-top: 15px;
         color: #555;
@@ -298,7 +305,7 @@ Ancestry Map
     }
 
     .legend-item { display: flex; align-items: center; gap: 6px; }
-    .legend-colour { width: 13px; height: 13px; border-radius: 50%; display: inline-block; }
+    .legend-colour { width: 13px; height: 13px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 
     .legend-foundation { background: #4B1F7A; }
     .legend-root { background: #AC5D1A; }
@@ -310,25 +317,25 @@ Ancestry Map
     .member-details {
         display: none;
         margin-top: 18px;
-        padding: 18px;
+        padding: 16px;
         border-radius: 13px;
         background: #faf7fc;
         border: 1px solid #e2d6eb;
     }
 
     .member-details.visible { display: block; }
-    .member-details h3 { margin-top: 0; color: var(--purple, #4B1F7A); }
+    .member-details h3 { margin-top: 0; color: var(--purple, #4B1F7A); font-size: 17px; }
 
     .member-details-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
+        gap: 10px;
     }
 
     .detail-item {
         background: white;
         border-radius: 9px;
-        padding: 11px;
+        padding: 10px 12px;
         border: 1px solid #eee8f2;
     }
 
@@ -337,24 +344,77 @@ Ancestry Map
     }
 
     .detail-item span { display: block; font-size: 11px; color: #777; margin-bottom: 4px; }
-    .detail-item strong { color: #333; overflow-wrap: anywhere; }
+    .detail-item strong { color: #333; overflow-wrap: anywhere; font-size: 13px; }
 
     .breadcrumb-path {
         color: var(--purple, #4B1F7A) !important;
         font-size: 13px;
+        line-height: 1.4;
     }
 
+    /* =========================================================
+       RESPONSIVE MOBILE BREAKPOINTS
+    ========================================================= */
+
     @media (max-width: 900px) {
-        .ancestry-layout { grid-template-columns: 1fr; }
-        .ancestry-sidebar { order: 1; }
-        .map-wrapper { order: 2; }
+        .ancestry-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .ancestry-sidebar {
+            order: 1;
+        }
+
+        .map-wrapper {
+            order: 2;
+        }
+
+        .map-scroll {
+            height: 520px;
+        }
     }
 
     @media (max-width: 600px) {
-        .member-details-grid { grid-template-columns: 1fr; }
-        .map-actions { width: 100%; }
-        .map-control { flex: 1; }
-        .ancestry-header h2 { font-size: 23px; }
+        .ancestry-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .ancestry-header h2 {
+            font-size: 22px;
+        }
+
+        .map-actions {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .map-control {
+            width: 100%;
+            padding: 8px 10px;
+            font-size: 12px;
+        }
+
+        .member-details-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .map-wrapper {
+            padding: 12px;
+        }
+
+        .map-scroll {
+            height: 450px;
+        }
+    }
+
+    @media (max-width: 420px) {
+        .map-actions {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 
@@ -399,30 +459,16 @@ Ancestry Map
                 placeholder="Search by name, surname, family or ID..."
             >
 
-            <div class="ancestry-stat">
-                <span>Total Recorded Members</span>
-                <strong id="memberCount">{{ members|length }}</strong>
-            </div>
+            <div class="ancestry-stat-grid">
+                <div class="ancestry-stat">
+                    <span>Total Members</span>
+                    <strong id="memberCount">{{ members|length }}</strong>
+                </div>
 
-            <div class="ancestry-stat">
-                <span>Displayed Members</span>
-                <strong id="displayedCount">{{ members|length }}</strong>
-            </div>
-
-            <div class="map-message">
-                <strong>Tree Hierarchy Levels</strong>
-                <br><br>
-                1. <strong>Foundation:</strong> UMUOTUTO
-                <br>
-                2. <strong>Family Root:</strong> Root clan branch
-                <br>
-                3. <strong>Family Name:</strong> Family unit
-                <br>
-                4. <strong>Surname:</strong> Surname lineage
-                <br>
-                5. <strong>Immediate Father:</strong> Direct parent
-                <br>
-                6. <strong>Children:</strong> Descendants
+                <div class="ancestry-stat">
+                    <span>Displayed</span>
+                    <strong id="displayedCount">{{ members|length }}</strong>
+                </div>
             </div>
         </aside>
 
@@ -648,7 +694,6 @@ function addWrappedText(group, text, x, y, maxChars, className, fill) {
     });
 }
 
-/* Calculate member count under branch */
 function countBranchMembers(node) {
     if (!node) return 0;
     if (node.type === "member") {
@@ -789,7 +834,6 @@ function showMemberDetails(member) {
     memberDetails.classList.add("visible");
     detailsName.textContent = member.name || "Unnamed Member";
     
-    // Construct breadcrumb trail
     const pathParts = ["UMUOTUTO"];
     if (member.rootName || member.rootCode) pathParts.push(member.rootName || member.rootCode);
     if (member.familyName) pathParts.push(member.familyName);
@@ -1243,6 +1287,7 @@ let isDragging = false;
 let startX, startY, scrollLeft, scrollTop;
 
 if (mapScrollContainer) {
+    /* MOUSE PANNING */
     mapScrollContainer.addEventListener("mousedown", (e) => {
         if (e.target.closest(".tree-node")) return;
         isDragging = true;
@@ -1269,6 +1314,34 @@ if (mapScrollContainer) {
         const walkY = (y - startY) * 1.3;
         mapScrollContainer.scrollLeft = scrollLeft - walkX;
         mapScrollContainer.scrollTop = scrollTop - walkY;
+    });
+
+    /* MOBILE TOUCH PANNING */
+    let touchStartX, touchStartY, touchScrollLeft, touchScrollTop;
+    let isTouchDragging = false;
+
+    mapScrollContainer.addEventListener("touchstart", (e) => {
+        if (e.touches.length === 1 && !e.target.closest(".tree-node")) {
+            isTouchDragging = true;
+            touchStartX = e.touches[0].pageX - mapScrollContainer.offsetLeft;
+            touchStartY = e.touches[0].pageY - mapScrollContainer.offsetTop;
+            touchScrollLeft = mapScrollContainer.scrollLeft;
+            touchScrollTop = mapScrollContainer.scrollTop;
+        }
+    }, { passive: true });
+
+    mapScrollContainer.addEventListener("touchmove", (e) => {
+        if (!isTouchDragging || e.touches.length > 1) return;
+        const x = e.touches[0].pageX - mapScrollContainer.offsetLeft;
+        const y = e.touches[0].pageY - mapScrollContainer.offsetTop;
+        const walkX = (x - touchStartX) * 1.3;
+        const walkY = (y - touchStartY) * 1.3;
+        mapScrollContainer.scrollLeft = touchScrollLeft - walkX;
+        mapScrollContainer.scrollTop = touchScrollTop - walkY;
+    }, { passive: true });
+
+    mapScrollContainer.addEventListener("touchend", () => {
+        isTouchDragging = false;
     });
 }
 
