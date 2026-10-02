@@ -10,6 +10,7 @@ from registry.views import (
     new_life_event,
     view_life_event,
     historian_chat,
+    member_summary,
     ancestry_map,
 )
 
@@ -40,9 +41,21 @@ urlpatterns = [
     ),
 
     path(
-        "registry/<int:pk>/",
+        "registry/<str:pk>/",
         view_registry,
         name="view_registry"
+    ),
+
+    path(
+        "registry/member/<str:pk>/",
+        view_registry,
+        name="view_member_detail"
+    ),
+
+    path(
+        "registry/api/member-summary/<str:pk>/",
+        member_summary,
+        name="member_summary"
     ),
 
     path(
@@ -58,7 +71,7 @@ urlpatterns = [
     ),
 
     path(
-        "life-events/<int:pk>/",
+        "life-events/<str:pk>/",
         view_life_event,
         name="view_life_event"
     ),
