@@ -583,12 +583,14 @@ Life Event Details
             ← Back to Life Events
         </a>
 
-        <a
-            href="{% url 'view_registry' member.pk %}"
-            class="primary-button"
-        >
-            View Member Registry
-        </a>
+        {% if member %}
+            <a
+                href="{% url 'view_registry' member.aut_id|default:member.pk %}"
+                class="primary-button"
+            >
+                View Member Registry
+            </a>
+        {% endif %}
 
     </div>
 

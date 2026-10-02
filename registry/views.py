@@ -479,12 +479,18 @@ def global_sheet(request):
 # ============================================================
 
 def view_registry(request, pk):
+    # Check if 'pk' is a string custom ID like 'UM_000001' or an integer ID
+    if str(pk).isdigit():
+        lookup = Q(pk=pk)
+    else:
+        lookup = Q(aut_id=pk)
+
     record = get_object_or_404(
         Registry.objects.prefetch_related(
             "life_events",
             "marriages",
         ),
-        pk=pk,
+        lookup,
     )
 
     marriages = record.marriages.all().order_by(
