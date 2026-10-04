@@ -307,13 +307,17 @@ class Registry(models.Model):
     # ========================================================
 
     class Meta:
-
         ordering = ["-aut_reg_date"]
 
+        indexes = [
+            models.Index(fields=["family_root"]),
+            models.Index(fields=["family_name"]),
+            models.Index(fields=["surname"]),
+            models.Index(fields=["firstname"]),
+        ]
+
         verbose_name = "Registry Record"
-
         verbose_name_plural = "Registry Records"
-
 
 # ============================================================
 # LIFE EVENTS
@@ -720,11 +724,14 @@ class LifeEvent(models.Model):
     # ========================================================
 
     class Meta:
-
         ordering = ["-event_date"]
 
-        verbose_name = "Life Event"
+        indexes = [
+            models.Index(fields=["event_type"]),
+            models.Index(fields=["event_date"]),
+        ]
 
+        verbose_name = "Life Event"
         verbose_name_plural = "Life Events"
 
 
@@ -944,11 +951,13 @@ class MarriageDetails(models.Model):
     # ========================================================
 
     class Meta:
-
         ordering = ["date_of_marriage"]
 
-        verbose_name = "Marriage Detail"
+        indexes = [
+            models.Index(fields=["date_of_marriage"]),
+        ]
 
+        verbose_name = "Marriage Detail"
         verbose_name_plural = "Marriage Details"
 
 
