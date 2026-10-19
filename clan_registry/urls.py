@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.urls import path
+from django.views.generic import TemplateView
 
 from registry.views import (
     dashboard,
@@ -10,7 +11,6 @@ from registry.views import (
     new_life_event,
     view_life_event,
     historian_chat,
-    member_summary,
     ancestry_map,
 )
 
@@ -41,21 +41,9 @@ urlpatterns = [
     ),
 
     path(
-        "registry/<str:pk>/",
+        "registry/<int:pk>/",
         view_registry,
         name="view_registry"
-    ),
-
-    path(
-        "registry/member/<str:pk>/",
-        view_registry,
-        name="view_member_detail"
-    ),
-
-    path(
-        "registry/api/member-summary/<str:pk>/",
-        member_summary,
-        name="member_summary"
     ),
 
     path(
@@ -71,7 +59,7 @@ urlpatterns = [
     ),
 
     path(
-        "life-events/<str:pk>/",
+        "life-events/<int:pk>/",
         view_life_event,
         name="view_life_event"
     ),
@@ -86,6 +74,15 @@ urlpatterns = [
         "ancestry-map/",
         ancestry_map,
         name="ancestry_map"
+    ),
+
+    path(
+        "service-worker.js",
+        TemplateView.as_view(
+            template_name="service-worker.js",
+            content_type="application/javascript",
+        ),
+        name="service_worker",
     ),
 
 ]

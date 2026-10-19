@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.urls import path
+from django.views.generic import TemplateView
 
 from registry.views import (
     dashboard,
@@ -73,6 +74,15 @@ urlpatterns = [
         "ancestry-map/",
         ancestry_map,
         name="ancestry_map"
+    ),
+
+    path(
+        "service-worker.js",
+        TemplateView.as_view(
+            template_name="service-worker.js",
+            content_type="application/javascript",
+        ),
+        name="service_worker",
     ),
 
 ]

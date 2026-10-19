@@ -23,6 +23,9 @@
         rel="stylesheet"
         href="{% static 'css/main.css' %}"
     >
+<link rel="manifest" href="{% static 'manifest.json' %}">
+<meta name="theme-color" content="#14532d">
+<link rel="apple-touch-icon" href="{% static 'images/pwa/icon-192.png' %}">
 
 </head>
 
@@ -260,6 +263,22 @@
                         Registry Manager
                     </span>
 
+<button
+    type="button"
+    id="install-app-button"
+    class="install-app-button"
+    hidden
+>
+    Install App
+</button>
+
+<span
+    id="install-app-status"
+    class="install-app-status"
+    role="status"
+    aria-live="polite"
+></span>
+
                 </div>
 
             </div>
@@ -365,6 +384,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 </script>
 
+<script src="{% static 'js/pwa-install.js' %}" defer></script>
 
 </body>
 

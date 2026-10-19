@@ -2606,3 +2606,36 @@ RESPONSIVE - 700px
         box-sizing: border-box;
     }
 }
+
+/* PWA installation button */
+.install-app-button {
+    padding: 10px 14px;
+    border: none;
+    border-radius: 8px;
+    background: #14532d;
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.install-app-button:hover {
+    background: #166534;
+}
+
+.install-app-button:focus-visible {
+    outline: 3px solid #86efac;
+    outline-offset: 3px;
+}
+
+.install-app-button[hidden] {
+    display: none;
+}
+
+.install-app-status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+}
